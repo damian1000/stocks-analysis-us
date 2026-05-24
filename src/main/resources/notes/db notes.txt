@@ -1,0 +1,61 @@
+select date, count(*) from reuters_code group by date order by date desc;
+-- 2019-12-25 00:00:00.000000	4186
+-- 2019-08-26 00:00:00.000000	4278
+-- 2019-08-24 00:00:00.000000	14
+-- 2019-08-23 00:00:00.000000	4
+-- 2019-03-03 00:00:00.000000	4148
+
+select date, count(*) from reuters_lookup group by date order by date desc;
+-- 2019-12-25 00:00:00.000000	1724
+-- 2019-08-26 00:00:00.000000	4278
+-- 2019-08-23 00:00:00.000000	4
+-- 2019-03-10 00:00:00.000000	4148
+-- 2019-03-03 00:00:00.000000	4148
+
+select date, count(*) from zacks_basic group by date order by date desc;
+-- 2019-12-25 00:00:00.000000	4186
+-- 2019-08-26 00:00:00.000000	4278
+-- 2019-08-24 00:00:00.000000	4278
+-- 2019-08-23 00:00:00.000000	4
+-- 2019-03-10 00:00:00.000000	519
+-- 2019-03-03 00:00:00.000000	4148
+
+select date, count(*) from zacks_industry group by date order by date desc;
+--  2019-12-25 00:00:00.000000	266
+-- 2019-08-26 00:00:00.000000	266
+-- 2019-08-24 00:00:00.000000	266
+-- 2019-08-23 00:00:00.000000	2
+-- 2019-03-10 00:00:00.000000	266
+-- 2019-03-03 00:00:00.000000	266
+
+select date, count(*) from zacks_sector_mapping group by date order by date desc;
+-- 2019-12-25 00:00:00.000000	266
+-- 2019-08-26 00:00:00.000000	266
+-- 2019-08-24 00:00:00.000000	266
+-- 2019-08-23 00:00:00.000000	266
+-- 2019-03-10 00:00:00.000000	266
+-- 2019-03-03 00:00:00.000000	266
+
+-----------------------------------------------------------------------------------
+-- 4184
+select count(*) from zacks_basic where date = '2019-02-19';
+
+-- 4184
+select count(*) from reuters_code where date = '2019-02-19';
+
+-- 4184
+select count(*) from reuters_lookup where date = '2019-02-19';
+
+-- 325 empty reuters codes out of 4184
+select count(*) from reuters_code where date = '2019-02-19' and reuterscode = '';
+
+-- null - 3555
+-- For input string: "ccess":true" - 1 TKC.N
+-- Lookup was not successfully as price was zero - 16
+-- No information available - 287
+-- Reuters Code is empty - 325
+select error_message, count(*) from reuters_lookup where date = '2019-02-19' group by error_message;
+
+select * from reuters_lookup where error_message = 'For input string: "ccess":true"';
+
+select date, count(*) from reuters_lookup group by date

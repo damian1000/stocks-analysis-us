@@ -1,0 +1,87 @@
+package com.dfh.stock.analysis.us._5analysis.service;
+
+import com.dfh.stock.analysis.us._4stocklookup.domian.StockLookup;
+import com.dfh.stock.analysis.us._5analysis.domain.PEGStock;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class PEGStockAnalyzerTest {
+
+    private PEGStockAnalyzer stockAnalyzer = new PEGStockAnalyzer();
+
+    @Test
+    public void testChris3LGRP() {
+        BigDecimal marketCap = BigDecimal.valueOf(3.70971);
+        String yearEnding = "3";
+        BigDecimal beta = BigDecimal.valueOf(1.2);
+        BigDecimal price = BigDecimal.valueOf(3.869);
+        BigDecimal lastYearEPS = BigDecimal.valueOf(0.545);
+        BigDecimal thisYearEstimateEPS = BigDecimal.valueOf(0.4684);
+        BigDecimal nextYearEstimateEPS = BigDecimal.valueOf(0.4936);
+        String earningAboveEstimates = "0/0";
+
+        StockLookup stock = StockLookup.builder()
+                .marketCap(marketCap)
+                .yearEnding(yearEnding)
+                .beta(beta)
+                .price(price)
+                .lastYearEPS(lastYearEPS)
+                .thisYearEstimateEPS(thisYearEstimateEPS)
+                .nextYearEstimateEPS(nextYearEstimateEPS)
+                .earningAboveEstimates(earningAboveEstimates)
+                .build();
+
+        PEGStock pegStock = stockAnalyzer.analyzeStocks(stock);
+
+        assertEquals(8.26, pegStock.getThisYearEstimatePE().doubleValue(), 0.01); //  price / thisYearEPS
+        assertEquals(7.84, pegStock.getNextYearEstimatePE().doubleValue(), 0.01); //  price / nextYearEPS
+
+        assertEquals(-14.06, pegStock.getThisYearEPSGrowth().doubleValue(), 0.01); // (thisYearEPS - lastYearEPS) / thisYearEPS
+        assertEquals(5.38, pegStock.getNextYearEPSGrowth().doubleValue(), 0.01); // (thisYearEPS - thisYearEPS) / thisYearEPS
+
+        assertEquals(-0.59, pegStock.getThisYearPEG().doubleValue(), 0.01); // thisYearPE / thisYearEPSGrowth
+        assertEquals(1.46, pegStock.getNextYearPEG().doubleValue(), 0.01); // nextYearEPS / nextYearEPSGrowth
+
+        assertEquals("00 Good", pegStock.getCategory());
+    }
+
+    @Test
+    public void testChrisACCOR() {
+        BigDecimal marketCap = BigDecimal.valueOf(8.13523);
+        String yearEnding = "12";
+        BigDecimal beta = BigDecimal.valueOf(1.3);
+        BigDecimal price = BigDecimal.valueOf(35.89);
+        BigDecimal lastYearEPS = BigDecimal.valueOf(0.545);
+        BigDecimal thisYearEstimateEPS = BigDecimal.valueOf(1.59);
+        BigDecimal nextYearEstimateEPS = BigDecimal.valueOf(1.84);
+        String earningAboveEstimates = "0/0";
+
+        StockLookup stock = StockLookup.builder()
+                .marketCap(marketCap)
+                .yearEnding(yearEnding)
+                .beta(beta)
+                .price(price)
+                .lastYearEPS(lastYearEPS)
+                .thisYearEstimateEPS(thisYearEstimateEPS)
+                .nextYearEstimateEPS(nextYearEstimateEPS)
+                .earningAboveEstimates(earningAboveEstimates)
+                .build();
+
+        PEGStock pegStock = stockAnalyzer.analyzeStocks(stock);
+
+        assertEquals(22.57, pegStock.getThisYearEstimatePE().doubleValue(), 0.01);
+        assertEquals(19.51, pegStock.getNextYearEstimatePE().doubleValue(), 0.01);
+
+        assertEquals(191.74, pegStock.getThisYearEPSGrowth().doubleValue(), 0.01);
+        assertEquals(15.72, pegStock.getNextYearEPSGrowth().doubleValue(), 0.01);
+
+        assertEquals(0.12, pegStock.getThisYearPEG().doubleValue(), 0.01);
+        assertEquals(1.24, pegStock.getNextYearPEG().doubleValue(), 0.01);
+
+        assertEquals("00 Good", pegStock.getCategory());
+    }
+
+}

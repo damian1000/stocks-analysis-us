@@ -1,0 +1,1 @@
+java -jar -Dspring.profiles.active=dev stock-analysis/stocks-analysis-us-1.0-SNAPSHOT.jar /dev/null &

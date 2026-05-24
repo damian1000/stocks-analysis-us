@@ -1,0 +1,24 @@
+AWS deployment notes
+====================
+
+Do not commit hostnames, usernames, passwords, private keys, or security-group rules here.
+Keep production infrastructure details in the password manager or deployment runbook.
+
+Required runtime configuration should be provided through environment variables:
+
+- DB_URL
+- DB_USERNAME
+- DB_PASSWORD
+- EMAIL_ENABLED
+- EMAIL_HOST
+- EMAIL_PORT
+- EMAIL_USERNAME
+- EMAIL_PASSWORD
+- EMAIL_FROM
+- EMAIL_TO
+
+Operational reminders:
+
+- Use the least permissive inbound security-group rules possible.
+- Rotate credentials immediately if they were ever committed to git.
+- Store SSH keys outside the repository.

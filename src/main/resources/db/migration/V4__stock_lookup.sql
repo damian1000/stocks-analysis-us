@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS stock_lookup (
+  id                                VARCHAR(200)  NOT NULL,
+  zackscode                         VARCHAR(200)  NOT NULL,
+  company                           VARCHAR(200),
+  currency                          VARCHAR(20),
+  market_cap                        NUMERIC,
+  year_ending                       VARCHAR(200),
+  beta                              NUMERIC,
+  price                             NUMERIC,
+  target_price                      NUMERIC,
+  last_year_eps                     NUMERIC,
+  last_year_pe                      NUMERIC,
+  this_year_estimate_eps            NUMERIC,
+  next_year_estimate_eps            NUMERIC,
+  earning_above_estimates           VARCHAR(200),
+  recommendation_rating             VARCHAR(200),
+  error_message                     VARCHAR(200),
+  date                              TIMESTAMP     NOT NULL,
+  PRIMARY KEY (id)
+);

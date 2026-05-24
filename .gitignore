@@ -1,0 +1,40 @@
+# Build / IDE
+out/
+target/
+bin/
+build/
+.gradle/
+.settings/
+.metadata/
+.idea/
+.vscode/
+.bsp/
+*.iml
+*.cache
+.class
+
+# Logs and generated reports
+*.log
+*.log.*
+*.log.*.gz
+*-stock-analysis.xls
+*.xls
+
+# Secrets / credentials
+.env
+.env.local
+*.pem
+*.ppk
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+**/keys/
+**/secrets/
+**/credentials/

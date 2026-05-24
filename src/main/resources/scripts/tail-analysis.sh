@@ -1,0 +1,1 @@
+tail -n 500 -f  stock-analysis-us.log

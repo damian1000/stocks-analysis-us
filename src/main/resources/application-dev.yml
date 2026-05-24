@@ -1,0 +1,66 @@
+spring:
+  main:
+    banner-mode: "OFF"
+  application:
+    name: stock-analysis-us
+  profiles:
+    active: dev
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/trading}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    initialization-mode: always
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 60000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        defaultSchema: public
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 10
+          lob:
+            non_contentual_creation: true
+    open-in-view: false
+  flyway:
+    enabled: true
+
+stocks:
+  analysis:
+    us:
+      stocklookup:
+        sleeptime:
+          min: 10
+          max: 15
+      template: template/ZacksPriceDetailsTemplate.xls
+      fx:
+        provider-url: ${FX_PROVIDER_URL:https://data.fixer.io/api/latest}
+        api-key: ${FX_API_KEY:}
+      email:
+        enabled: ${EMAIL_ENABLED:false}
+        host: ${EMAIL_HOST:}
+        port: ${EMAIL_PORT:587}
+        username: ${EMAIL_USERNAME:}
+        password: ${EMAIL_PASSWORD:}
+        from: ${EMAIL_FROM:}
+        from-name: ${EMAIL_FROM_NAME:}
+        to: ${EMAIL_TO:}
+        to-name: ${EMAIL_TO_NAME:}
+
+logging:
+  file:
+    name: "stock-analysis-us.log"
+  level:
+    org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl: ERROR
+    org.apachehttp.wire: INFO
+    org.hibernate.metamodel.internal: ERROR
+    org.apache.commons.jexl2.JexlEngine: ERROR
+
+server:
+  port: ${SERVER_PORT:9000}

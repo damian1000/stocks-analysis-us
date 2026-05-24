@@ -1,0 +1,33 @@
+CREATE TABLE IF NOT EXISTS stock_analysis (
+  id                                BIGINT NOT NULL,
+  category                          VARCHAR(200),
+  error_message                     VARCHAR(200),
+  sectorGroup                       VARCHAR(200),
+  mediumIndustryGroup               VARCHAR(200),
+  industry                          VARCHAR(200),
+  zackscode                         VARCHAR(200),
+  zackscompany                      VARCHAR(200),
+  company                           VARCHAR(200),
+  currency                          VARCHAR(20),
+  market_cap                        NUMERIC,
+  year_ending                       VARCHAR(200),
+  beta                              NUMERIC,
+  price                             NUMERIC,
+  target_price                      NUMERIC,
+  last_year_eps                     NUMERIC,
+  last_year_pe                      NUMERIC,
+  this_year_estimate_eps            NUMERIC,
+  next_year_estimate_eps            NUMERIC,
+  earning_above_estimates           VARCHAR(200),
+  recommendation_rating             VARCHAR(200),
+  this_year_estimate_pe             NUMERIC,
+  next_year_estimate_pe             NUMERIC,
+  this_year_eps_growth              NUMERIC,
+  next_year_eps_growth              NUMERIC,
+  this_year_peg                     NUMERIC,
+  next_year_peg                     NUMERIC,
+  date                              TIMESTAMP     NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE SEQUENCE stock_analysis_sequence INCREMENT BY 500;
