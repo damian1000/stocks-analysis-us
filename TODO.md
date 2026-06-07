@@ -1,5 +1,27 @@
 # TODO
 
+## Roadmap (prioritized)
+
+### P1 — correctness + honest claims (cheap, do first)
+
+- **Fix `AnalysisRepository extends JpaRepository<AnalysisStock, String>` — the entity id is `Long`.** Already on the list below but bumping it here: this is a real bug that an external reviewer flagged, easy to fix.
+- **Wire Testcontainers PostgreSQL into the test suite.** Today the H2 tests don't actually exercise the Flyway-created schema or the real JPA mappings. A single `@DataJpaTest`-style class that runs against Postgres 17 in Testcontainers would catch the `String`/`Long` mismatch above and any other column-name drift between migrations and entities. Highest-value test we don't have.
+- **Sweep README claims against current behaviour.** The recent rename pass tidied package paths, but verify every section (CI, "what it demonstrates", "what it would need to be a real signal-gen pipeline") still matches reality before deciding to pin/promote.
+
+### P2 — pick one depth investment
+
+The external review suggested turning this into a credible quant-research pipeline. That's the right destination but a long road. Pick one of these and commit, rather than nibbling at all of them:
+
+- **Point-in-time fundamentals + delisted security support.** Currently Yahoo gives "today's number"; backtests need as-of values to avoid look-ahead. This is the single biggest gap between "screener" and "research system" and the one a quant reviewer will look for first.
+- **Walk-forward backtester with an immutable experiment manifest.** Run the PEG scorer over a date range, persist the manifest (universe snapshot, parameters, code commit) so a result is reproducible.
+- **Data-quality + look-ahead-bias checks at the pipeline boundary.** Flag stale prices, missing fundamentals, halted tickers; refuse to score rows that fail the checks.
+
+### P3 — stretch / aspirational (only if P2 is done)
+
+- Transaction costs, borrow costs, corporate actions.
+- Benchmark comparison + turnover/drawdown/Sharpe/exposure reports.
+- A small Python notebook that consumes exported results (demonstrates the research-to-production handoff).
+
 ## Remaining test gaps
 
 Overall line coverage is **~91%**. The remaining unit-level gaps are infra-bound:
