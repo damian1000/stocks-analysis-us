@@ -49,6 +49,30 @@ public class PEGStockAnalyzerTest {
     }
 
     @Test
+    public void invalidLookupShortCircuitsToCategory20() {
+        StockLookup invalid = StockLookup.builder().build(); // no price/EPS
+        PEGStock peg = stockAnalyzer.analyzeStocks(invalid);
+        assertEquals("20 Reuters Lookup Invalid", peg.getCategory());
+    }
+
+    @Test
+    public void missingStatsCategoryWhenBothPegNull() {
+        // Zero EPS values cause divide() to return null -> both PEGs null -> "10 Missing Stats"
+        StockLookup stock = StockLookup.builder()
+                .marketCap(BigDecimal.valueOf(1))
+                .yearEnding("12")
+                .beta(BigDecimal.ONE)
+                .price(BigDecimal.valueOf(10))
+                .lastYearEPS(BigDecimal.ZERO)
+                .thisYearEstimateEPS(BigDecimal.ZERO)
+                .nextYearEstimateEPS(BigDecimal.ZERO)
+                .earningAboveEstimates("0/0")
+                .build();
+        PEGStock peg = stockAnalyzer.analyzeStocks(stock);
+        assertEquals("10 Missing Stats", peg.getCategory());
+    }
+
+    @Test
     public void testChrisACCOR() {
         BigDecimal marketCap = BigDecimal.valueOf(8.13523);
         String yearEnding = "12";
