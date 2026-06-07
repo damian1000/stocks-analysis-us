@@ -1,12 +1,12 @@
 package io.github.damian1000.stocks;
 
 import io.github.damian1000.stocks.event.Event;
-import io.github.damian1000.stocks.analysis.us._1sectormapping.event.ZacksSectorMappingStartEvent;
-import io.github.damian1000.stocks.analysis.us._2zacksindustry.event.ZacksListStartEvent;
-import io.github.damian1000.stocks.analysis.us._3zackscode.event.ZacksBasicStartEvent;
-import io.github.damian1000.stocks.analysis.us._4stocklookup.event.StockLookupStartEvent;
-import io.github.damian1000.stocks.analysis.us._5analysis.event.AnalysisStockStartEvent;
-import io.github.damian1000.stocks.analysis.us._6export.event.ExportStartEvent;
+import io.github.damian1000.stocks.analysis.us.sectormapping.event.ZacksSectorMappingStartEvent;
+import io.github.damian1000.stocks.analysis.us.zacksindustry.event.ZacksListStartEvent;
+import io.github.damian1000.stocks.analysis.us.zackscode.event.ZacksBasicStartEvent;
+import io.github.damian1000.stocks.analysis.us.stocklookup.event.StockLookupStartEvent;
+import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockStartEvent;
+import io.github.damian1000.stocks.analysis.us.export.event.ExportStartEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.SpringApplication;

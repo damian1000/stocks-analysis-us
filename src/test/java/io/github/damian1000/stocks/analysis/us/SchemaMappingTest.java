@@ -1,7 +1,7 @@
 package io.github.damian1000.stocks.analysis.us;
 
-import io.github.damian1000.stocks.analysis.us._4stocklookup.domain.StockLookup;
-import io.github.damian1000.stocks.analysis.us._5analysis.domain.AnalysisStock;
+import io.github.damian1000.stocks.analysis.us.stocklookup.domain.StockLookup;
+import io.github.damian1000.stocks.analysis.us.analysis.domain.AnalysisStock;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;

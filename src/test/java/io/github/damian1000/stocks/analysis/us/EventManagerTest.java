@@ -1,16 +1,16 @@
 package io.github.damian1000.stocks.analysis.us;
 
-import io.github.damian1000.stocks.analysis.us._1sectormapping.event.ZacksSectorMappingCompleteEvent;
-import io.github.damian1000.stocks.analysis.us._2zacksindustry.event.ZacksListCompleteEvent;
-import io.github.damian1000.stocks.analysis.us._2zacksindustry.event.ZacksListStartEvent;
-import io.github.damian1000.stocks.analysis.us._3zackscode.event.ZacksBasicCompleteEvent;
-import io.github.damian1000.stocks.analysis.us._3zackscode.event.ZacksBasicStartEvent;
-import io.github.damian1000.stocks.analysis.us._4stocklookup.event.StockLookupCompleteEvent;
-import io.github.damian1000.stocks.analysis.us._4stocklookup.event.StockLookupStartEvent;
-import io.github.damian1000.stocks.analysis.us._5analysis.event.AnalysisStockCompleteEvent;
-import io.github.damian1000.stocks.analysis.us._5analysis.event.AnalysisStockStartEvent;
-import io.github.damian1000.stocks.analysis.us._6export.event.ExportCompleteEvent;
-import io.github.damian1000.stocks.analysis.us._6export.event.ExportStartEvent;
+import io.github.damian1000.stocks.analysis.us.sectormapping.event.ZacksSectorMappingCompleteEvent;
+import io.github.damian1000.stocks.analysis.us.zacksindustry.event.ZacksListCompleteEvent;
+import io.github.damian1000.stocks.analysis.us.zacksindustry.event.ZacksListStartEvent;
+import io.github.damian1000.stocks.analysis.us.zackscode.event.ZacksBasicCompleteEvent;
+import io.github.damian1000.stocks.analysis.us.zackscode.event.ZacksBasicStartEvent;
+import io.github.damian1000.stocks.analysis.us.stocklookup.event.StockLookupCompleteEvent;
+import io.github.damian1000.stocks.analysis.us.stocklookup.event.StockLookupStartEvent;
+import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockCompleteEvent;
+import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockStartEvent;
+import io.github.damian1000.stocks.analysis.us.export.event.ExportCompleteEvent;
+import io.github.damian1000.stocks.analysis.us.export.event.ExportStartEvent;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;

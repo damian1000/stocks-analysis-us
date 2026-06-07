@@ -7,7 +7,7 @@
 
 A Spring Boot 4 / Java 25 service that builds a **ranked US equity universe from public fundamentals**. It walks Zacks sector/industry classifications and Yahoo Finance fundamentals, applies a configurable PEG-style fundamental ranking, and exports the result as a desk-friendly Excel report.
 
-The pipeline is structured so the signal (currently PEG) is one stage of six — swap `_5analysis` for a different scoring rule (e.g. EV/EBITDA decile rank, momentum, quality) and the rest of the pipeline doesn't change.
+The pipeline is structured so the signal (currently PEG) is one stage of six — swap `analysis` for a different scoring rule (e.g. EV/EBITDA decile rank, momentum, quality) and the rest of the pipeline doesn't change.
 
 ## Pipeline architecture
 
