@@ -73,7 +73,7 @@ test {
 jar {
     manifest {
         attributes(
-                'Main-Class': 'com.dfh.Application',
+                'Main-Class': 'io.github.damian1000.stocks.Application',
         )
     }
 
