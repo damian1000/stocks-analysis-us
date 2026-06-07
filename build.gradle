@@ -78,6 +78,23 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+    // Exclude scaffolding that isn't usefully unit-testable:
+    //   Application       — Spring Boot main, exercised by Spring's @SpringBootTest only
+    //   HtmlRetriever     — wraps real network I/O via Apache HttpClient
+    //   *Repository       — Spring Data repository interfaces (no bodies) plus
+    //                       the inner ZacksSpecs spec-builder classes
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/Application.class',
+                    '**/HtmlRetriever.class',
+                    '**/*Repository.class',
+                    '**/*Repository$*.class',
+                ])
+            })
+        )
+    }
 }
 
 jar {
