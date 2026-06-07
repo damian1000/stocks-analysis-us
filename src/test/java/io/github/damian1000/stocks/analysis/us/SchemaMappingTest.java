@@ -1,6 +1,6 @@
 package io.github.damian1000.stocks.analysis.us;
 
-import io.github.damian1000.stocks.analysis.us._4stocklookup.domian.StockLookup;
+import io.github.damian1000.stocks.analysis.us._4stocklookup.domain.StockLookup;
 import io.github.damian1000.stocks.analysis.us._5analysis.domain.AnalysisStock;
 import org.junit.jupiter.api.Test;
 

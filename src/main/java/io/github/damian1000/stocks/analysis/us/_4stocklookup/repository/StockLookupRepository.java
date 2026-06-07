@@ -1,7 +1,7 @@
 package io.github.damian1000.stocks.analysis.us._4stocklookup.repository;
 
-import io.github.damian1000.stocks.analysis.us._4stocklookup.domian.StockLookup;
-import io.github.damian1000.stocks.analysis.us._4stocklookup.domian.StockLookup_;
+import io.github.damian1000.stocks.analysis.us._4stocklookup.domain.StockLookup;
+import io.github.damian1000.stocks.analysis.us._4stocklookup.domain.StockLookup_;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

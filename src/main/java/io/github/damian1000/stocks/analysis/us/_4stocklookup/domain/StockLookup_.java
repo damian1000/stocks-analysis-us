@@ -1,4 +1,4 @@
-package io.github.damian1000.stocks.analysis.us._4stocklookup.domian;
+package io.github.damian1000.stocks.analysis.us._4stocklookup.domain;
 
 import jakarta.annotation.Generated;
 import jakarta.persistence.metamodel.SingularAttribute;

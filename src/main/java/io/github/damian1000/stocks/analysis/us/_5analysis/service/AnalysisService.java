@@ -4,7 +4,7 @@ import io.github.damian1000.stocks.analysis.us._1sectormapping.domain.ZacksSecto
 import io.github.damian1000.stocks.analysis.us._1sectormapping.repository.ZacksSectorMappingRepository;
 import io.github.damian1000.stocks.analysis.us._3zackscode.domain.ZacksCode;
 import io.github.damian1000.stocks.analysis.us._3zackscode.repository.ZacksBasicRepository;
-import io.github.damian1000.stocks.analysis.us._4stocklookup.domian.StockLookup;
+import io.github.damian1000.stocks.analysis.us._4stocklookup.domain.StockLookup;
 import io.github.damian1000.stocks.analysis.us._4stocklookup.repository.StockLookupRepository;
 import io.github.damian1000.stocks.analysis.us._5analysis.domain.AnalysisStock;
 import io.github.damian1000.stocks.analysis.us._5analysis.domain.PEGStock;

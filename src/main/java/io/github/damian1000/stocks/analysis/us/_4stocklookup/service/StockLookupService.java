@@ -2,7 +2,7 @@ package io.github.damian1000.stocks.analysis.us._4stocklookup.service;
 
 import io.github.damian1000.stocks.analysis.us._3zackscode.domain.ZacksCode;
 import io.github.damian1000.stocks.analysis.us._3zackscode.repository.ZacksBasicRepository;
-import io.github.damian1000.stocks.analysis.us._4stocklookup.domian.StockLookup;
+import io.github.damian1000.stocks.analysis.us._4stocklookup.domain.StockLookup;
 import io.github.damian1000.stocks.analysis.us._4stocklookup.event.StockLookupCompleteEvent;
 import io.github.damian1000.stocks.analysis.us._4stocklookup.event.StockLookupStartEvent;
 import io.github.damian1000.stocks.analysis.us._4stocklookup.repository.StockLookupRepository;
