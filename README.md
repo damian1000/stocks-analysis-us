@@ -24,7 +24,7 @@ The pipeline is structured so the signal (currently PEG) is one stage of six —
    └──────────────────┘   └───────────────────┘   └──────────────────┘
 ```
 
-Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each numbered package in `src/main/java/com/dfh/stock/analysis/us/` owns one stage, its DTOs, its repository, and its event publisher. Adding a stage is a new package, not a rewrite.
+Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each stage package under `src/main/java/io/github/damian1000/stocks/analysis/us/` (`sectormapping`, `zacksindustry`, `zackscode`, `stocklookup`, `analysis`, `export`) owns one stage, its DTOs, its repository, and its event publisher. Adding a stage is a new package, not a rewrite.
 
 ## What it demonstrates
 
@@ -37,7 +37,7 @@ Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each n
 
 ## Prerequisites
 
-- JDK 25 (Gradle toolchain will fetch one if missing)
+- JDK 25 — install it yourself (e.g. `winget install Microsoft.OpenJDK.25` or `brew install openjdk@25`). The Gradle toolchain block points the build at JDK 25 if one is already on the machine but does not auto-download it.
 - Docker (local Postgres via `docker compose`)
 
 ## Quick start

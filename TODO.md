@@ -1,22 +1,11 @@
 # TODO
 
-## Coverage gap to 80% (Highest Leverage)
+## Remaining test gaps
 
-Current line coverage is **~36%** (after Amount/HtmlParser/EventManager/NumberUtils/EmailExport tests + JaCoCo exclusions for `Application`, `HtmlRetriever`, and `*Repository` classes). Lifting it to 80% needs fixture-based tests on six classes, each ~30-60 minutes of focused work:
+Overall line coverage is **~91%**. The remaining unit-level gaps are infra-bound:
 
-- **YahooStockLookup** (~92 lines) — nested JSON parse via `quoteSummaryStore` → `summaryDetail` / `financialData` / `earningsTrend` / `earningsHistory`. Save a sample Yahoo response JSON as a test fixture (no live network), mock `HtmlRetriever` to return it, assert on each `stockLookup.set*` path including the null-guards. Cover the half-populated case too — most real responses are missing some sections.
-- **ZacksSectorMappingService** (~63 lines) — fetch and parse the Zacks sector list. Same pattern: saved HTML fixture, mocked retriever, assert the parsed entities and the `repository.save(...)` calls.
-- **AnalysisService** (~63 lines) — applies PEG ranking over the stock lookup table; mock the repository, assert on the computed `AnalysisStock` rows for representative input.
-- **ZacksListRetrieverService** (~60 lines) — Zacks industry list parsing.
-- **StockLookupService** (~53 lines) — orchestrates per-symbol Yahoo lookups; mostly delegation but worth testing the retry-and-skip-on-error path.
-- **ZacksBasicRetrieverService** (~40 lines) — Zacks code extraction per symbol.
-
-Each test file should follow the pattern: `@ExtendWith(MockitoExtension)`, mock `HtmlRetriever` + repository + `ApplicationEventPublisher`, drive the service with a saved fixture under `src/test/resources/fixtures/<service>/`, and verify both the parsed output and the event published on completion.
-
-Smaller cleanups that also help:
-- `ExportService` (18 lines) — mock the repository, assert excel + email export are invoked.
-- `ExcelExport` (14 lines) — write to a temp file, read back and assert headers and one row.
-- POJO tests for `PEGStock`, `AnalysisStock`, `ZacksList`, `IdGenerator`, `Formatter` (~15 lines combined).
+- **`ExcelExport`** — needs a JXLS template fixture in `src/test/resources/template/`, then write to a temp file and assert headers + one row. The production template under `src/main/resources/template/` could be reused as a fixture.
+- **`EmailExport`** — the disabled path is covered; the enabled SMTP path needs a fake SMTP server (e.g. GreenMail or Wiser) to assert host/port/auth without sending real mail.
 
 ## Security
 
@@ -46,13 +35,11 @@ Smaller cleanups that also help:
 
 ## Tests
 
-- Add PostgreSQL integration tests, preferably using Testcontainers.
-- Re-enable external parser tests using saved HTML fixtures instead of live network calls.
-- Add fixture-based tests for Zacks sector mapping, Zacks industry list, Zacks code extraction, and Yahoo quote summary parsing.
-- Add tests for pipeline event ordering and failure propagation.
-- Add tests for email export disabled/enabled configuration paths.
-- Add tests for stock lookup error-row persistence.
-- Add tests for report generation using a small deterministic dataset.
+- Add PostgreSQL integration tests, preferably using Testcontainers, so JPA mappings are validated against the Flyway-created schema (closest to production behaviour today).
+- Re-enable the live network parser tests (`YahooStockLookupTest`'s `@Disabled` methods) as opt-in tests gated by a system property — so they can be run manually but don't break CI.
+- Add tests for pipeline event ordering and failure propagation across stages.
+- Enable-path test for `EmailExport` using a fake SMTP server.
+- Add tests for report generation using a small deterministic dataset (end-to-end through the export stage).
 
 ## Design Review
 
@@ -70,7 +57,6 @@ Smaller cleanups that also help:
 - Remove generated `build/`, `.gradle/`, and IDE files from working copies before commits.
 - Add dependency vulnerability scanning.
 - Review deprecated APIs reported by Gradle and update replacements.
-- Evaluate whether Java 25 is necessary, or whether an LTS runtime would reduce operational friction.
 - Add formatting/linting rules so style stays consistent.
 - Add CI artifacts for test reports and migration validation.
 
