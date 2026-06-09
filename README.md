@@ -44,10 +44,34 @@ Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each s
 ```bash
 cp .env.example .env             # tweak if you want
 docker compose up -d             # Postgres on 5432
-./gradlew bootRun                # defaults to `dev` profile
+./gradlew bootRun                # defaults to `dev` profile; runs the full pipeline
 ```
 
 App listens on `http://localhost:9000` (override with `SERVER_PORT`).
+
+## Running individual pipeline stages
+
+The pipeline is event-driven: by default `bootRun` fires the first event (`ZacksSectorMappingStartEvent`) and each stage publishes the next stage's start event on completion. To start the pipeline from any other stage, pass `-Devent=<StartEventName>`:
+
+```bash
+# Full pipeline (default) — starts at sector mapping
+./gradlew bootRun
+
+# Start from a specific stage
+./gradlew bootRun -Devent=ZacksListStartEvent
+./gradlew bootRun -Devent=ZacksBasicStartEvent
+./gradlew bootRun -Devent=StockLookupStartEvent
+./gradlew bootRun -Devent=AnalysisStockStartEvent
+./gradlew bootRun -Devent=ExportStartEvent
+
+# Use a specific date for "today" (otherwise: system date)
+./gradlew bootRun -Ddate=2024-06-09
+
+# Override the Zacks reference date independently (analysis stage joins on it)
+./gradlew bootRun -Devent=AnalysisStockStartEvent -Ddate=2024-06-09 -DzacksDate=2024-06-07
+```
+
+Note: stages **chain forward** from whatever event you start with, so e.g. `StockLookupStartEvent` will also run analysis + export. To run a single stage in isolation, you'd need to comment out its `@EventListener` for the completion event on the next stage.
 
 ## Configuration
 
@@ -58,6 +82,10 @@ App listens on `http://localhost:9000` (override with `SERVER_PORT`).
 | `DB_PASSWORD` | `postgres` | |
 | `FX_PROVIDER_URL` | `https://data.fixer.io/api/latest` | FX rate source |
 | `FX_API_KEY` | _empty_ | Leave blank to skip FX conversion |
+| `EMAIL_ENABLED` | `false` | Set `true` to email the export at the end of the pipeline |
+| `EMAIL_HOST` / `EMAIL_PORT` | `smtp.gmail.com` / `587` | SMTP relay (only used if enabled) |
+| `EMAIL_USERNAME` / `EMAIL_PASSWORD` | _empty_ | SMTP credentials (only used if enabled) |
+| `EMAIL_FROM` / `EMAIL_FROM_NAME` / `EMAIL_TO` / `EMAIL_TO_NAME` | _empty_ | Email addresses (only used if enabled) |
 | `SERVER_PORT` | `9000` | HTTP port |
 | `SPRING_PROFILES_ACTIVE` | `dev` | Spring profile |
 

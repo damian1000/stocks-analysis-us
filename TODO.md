@@ -8,8 +8,6 @@
 - Add a Python notebook that consumes exported results.
 - Test `ExcelExport` with a JXLS template fixture under `src/test/resources/template/`.
 - Test `EmailExport`'s enabled SMTP path against GreenMail or Wiser.
-- Add secret scanning to CI (GitHub secret scanning or pre-commit hook).
-- Review all entity column names against migrations (only `AnalysisStock` is currently covered by Testcontainers).
 - Reconcile date columns mapped as `LocalDate` against migrations that define `TIMESTAMP` (all 5 entity tables affected — pick: migrate columns to `DATE`, or switch fields to `LocalDateTime`).
 - Ensure partial stage failures cannot delete existing good data before replacement data is confirmed.
 - Add structured retry config for HTTP calls (retry count, delay, timeout, user-agent).
@@ -29,10 +27,7 @@
 - Decide whether this app is a batch job or web service; remove server concerns if batch-only.
 - Migrate to Spring Batch if restartability, stage tracking, and retry behaviour become important.
 - Review and replace deprecated Gradle APIs.
-- Add formatting/linting rules.
 - Publish CI artifacts for test reports and migration validation.
-- Document exact pipeline commands for running one stage or the full pipeline.
-- Document required environment variables for database, FX, and email.
 - Document external data-source limitations and throttling behaviour.
 - Add a recovery guide for failed or partial runs.
 - Add a schema overview explaining the five pipeline tables and report output.
