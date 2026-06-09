@@ -25,12 +25,10 @@ public class Application {
 
     public static void main(String[] args) {
         String zacksDate = System.getProperty("zacksDate");
-        String reutersCodeDate = System.getProperty("reutersCodeDate");
         String event = System.getProperty("event");
         String dateAsString = System.getProperty("date");
 
-        log.info("System parameters zacksDate={}, reutersCodeDate={}, event={}, date={}", zacksDate, reutersCodeDate,
-                event, dateAsString);
+        log.info("System parameters zacksDate={}, event={}, date={}", zacksDate, event, dateAsString);
 
         LocalDate date;
         if (!StringUtils.isEmpty(dateAsString)) {

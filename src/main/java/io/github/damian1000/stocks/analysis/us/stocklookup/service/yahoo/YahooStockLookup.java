@@ -34,11 +34,21 @@ public class YahooStockLookup {
         HtmlResponse overviewHtmlResponse = htmlRetriever.getHtml(String.format("https://uk.finance.yahoo.com/quote/%s/analysis?p=%s", zacksCode, zacksCode));
         String overview = overviewHtmlResponse.rawHtml;
         String quoteSummaryRaw = htmlParser.extractTextFromStartString(overview, "QuoteSummaryStore", "summaryDetail", "\"symbol\":");
+        if (quoteSummaryRaw == null || quoteSummaryRaw.isBlank()) {
+            throw new DataRetrievalError(String.format(
+                    "Yahoo response for %s did not contain a QuoteSummaryStore section — page format may have changed",
+                    zacksCode));
+        }
         quoteSummaryRaw = "{\""+quoteSummaryRaw.substring(0, quoteSummaryRaw.length()-1)+"}}";
 
         Gson g = new Gson();
         QuoteSummary quoteSummary = g.fromJson(quoteSummaryRaw, QuoteSummary.class);
-        if (quoteSummary.getQuoteSummaryStore() != null) {
+        if (quoteSummary == null || quoteSummary.getQuoteSummaryStore() == null) {
+            throw new DataRetrievalError(String.format(
+                    "Yahoo response for %s parsed but QuoteSummaryStore was missing or empty",
+                    zacksCode));
+        }
+        {
 
             QuoteSummaryStore quoteSummaryStore = quoteSummary.getQuoteSummaryStore();
 

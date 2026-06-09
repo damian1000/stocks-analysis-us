@@ -43,9 +43,9 @@ public class AnalysisService {
     @EventListener
     @Transactional
     public void onAnalysisServiceEvent(AnalysisStockStartEvent event) {
-        log.info("Retrieving reuters lookup for date {}", event.getDate());
+        log.info("Retrieving stock lookup for date {}", event.getDate());
         Set<StockLookup> stockLookupList = stockLookupRepository.findByDate(event.getDate());
-        log.info("Retrieved a total of reuters lookup {} for date {}", stockLookupList.size(), event.getDate());
+        log.info("Retrieved a total of stock lookup {} for date {}", stockLookupList.size(), event.getDate());
 
         log.info("Deleting analysis for date {}", event.getDate());
         analysisRepository.deleteByDate(event.getDate());
