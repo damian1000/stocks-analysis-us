@@ -1,9 +1,8 @@
 # US Equity Universe Pipeline
 
 [![CI](https://github.com/damian1000/stocks-analysis-us/actions/workflows/ci.yml/badge.svg)](https://github.com/damian1000/stocks-analysis-us/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/damian1000/stocks-analysis-us/actions/workflows/codeql.yml/badge.svg)](https://github.com/damian1000/stocks-analysis-us/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/damian1000/stocks-analysis-us/graph/badge.svg)](https://codecov.io/gh/damian1000/stocks-analysis-us)
-[![JDK](https://img.shields.io/badge/jdk-25-orange)](https://openjdk.org/projects/jdk/25/)
-[![Spring Boot](https://img.shields.io/badge/spring--boot-4.0.6-brightgreen)](https://spring.io/projects/spring-boot)
 
 A Spring Boot 4 / Java 25 service that builds a **ranked US equity universe from public fundamentals**. It walks Zacks sector/industry classifications and Yahoo Finance fundamentals, applies a configurable PEG-style fundamental ranking, and exports the result as a desk-friendly Excel report.
 

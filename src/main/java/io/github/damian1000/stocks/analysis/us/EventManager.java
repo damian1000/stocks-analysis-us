@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 public class EventManager {
 
     private ApplicationEventPublisher eventPublisher;
-    
+
     @EventListener
     public void onZacksSectorMappingCompleteEvent(ZacksSectorMappingCompleteEvent event) {
         log.info("onZacksSectorMappingCompleteEvent {}", event);
@@ -40,7 +40,7 @@ public class EventManager {
         log.info("publishing next event {}", nextEvent);
         eventPublisher.publishEvent(nextEvent);
     }
-    
+
     @EventListener
     public void onZacksBasicCompleteEvent(ZacksBasicCompleteEvent event) {
         log.info("onZacksBasicCompleteEvent {}", event);
@@ -56,7 +56,7 @@ public class EventManager {
         log.info("publishing next event {}", nextEvent);
         eventPublisher.publishEvent(nextEvent);
     }
-    
+
     @EventListener
     public void onAnalysisStockCompleteEvent(AnalysisStockCompleteEvent event) {
         log.info("onAnalysisStockCompleteEvent {}", event);
@@ -64,11 +64,10 @@ public class EventManager {
         log.info("publishing next event {}", nextEvent);
         eventPublisher.publishEvent(nextEvent);
     }
-    
+
     @EventListener
     public void onExportCompleteEvent(ExportCompleteEvent event) {
        log.info("onExportCompleteEvent {}", event);
     }
 
 }
-

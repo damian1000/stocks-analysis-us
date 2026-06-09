@@ -13,4 +13,3 @@ import java.time.LocalDate;
 public class ZacksSectorMappingCompleteEvent implements Event {
     private LocalDate date;
 }
-

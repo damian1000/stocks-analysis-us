@@ -10,7 +10,7 @@
 - Test `EmailExport`'s enabled SMTP path against GreenMail or Wiser.
 - Add secret scanning to CI (GitHub secret scanning or pre-commit hook).
 - Review all entity column names against migrations (only `AnalysisStock` is currently covered by Testcontainers).
-- Reconcile date columns mapped as `LocalDate` against migrations that define `TIMESTAMP`.
+- Reconcile date columns mapped as `LocalDate` against migrations that define `TIMESTAMP` (all 5 entity tables affected — pick: migrate columns to `DATE`, or switch fields to `LocalDateTime`).
 - Ensure partial stage failures cannot delete existing good data before replacement data is confirmed.
 - Add structured retry config for HTTP calls (retry count, delay, timeout, user-agent).
 - Add rate-limiting tests around `StockLookupService`.
@@ -28,8 +28,6 @@
 - Replace `date`, `event`, `zacksDate` system properties with typed Spring config or CLI args.
 - Decide whether this app is a batch job or web service; remove server concerns if batch-only.
 - Migrate to Spring Batch if restartability, stage tracking, and retry behaviour become important.
-- Remove generated `build/`, `.gradle/`, IDE files from working copies before commits.
-- Add dependency vulnerability scanning.
 - Review and replace deprecated Gradle APIs.
 - Add formatting/linting rules.
 - Publish CI artifacts for test reports and migration validation.

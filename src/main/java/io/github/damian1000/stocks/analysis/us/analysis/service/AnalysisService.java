@@ -11,7 +11,6 @@ import io.github.damian1000.stocks.analysis.us.analysis.domain.PEGStock;
 import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockCompleteEvent;
 import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockStartEvent;
 import io.github.damian1000.stocks.analysis.us.analysis.repository.AnalysisRepository;
-import io.github.damian1000.stocks.util.IdGenerator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
