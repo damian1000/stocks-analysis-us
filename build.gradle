@@ -33,7 +33,7 @@ dependencies {
 
     // JXLS (Excel templating)
     implementation 'org.jxls:jxls:2.14.0'          // <-- contains org.jxls.util.JxlsHelper
-    implementation 'org.jxls:jxls-poi:3.0.0'       // POI integration for JXLS
+    implementation 'org.jxls:jxls-poi:3.1.0'       // POI integration for JXLS
 
     // Content Detection and Extraction
     implementation 'org.apache.tika:tika-core:3.2.3'
