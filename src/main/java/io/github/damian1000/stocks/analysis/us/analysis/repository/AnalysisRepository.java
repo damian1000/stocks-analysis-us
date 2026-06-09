@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 @Component
-public interface AnalysisRepository extends JpaRepository<AnalysisStock, String>, JpaSpecificationExecutor {
+public interface AnalysisRepository extends JpaRepository<AnalysisStock, Long>, JpaSpecificationExecutor<AnalysisStock> {
 
     @Transactional
     @Modifying

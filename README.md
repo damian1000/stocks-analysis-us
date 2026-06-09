@@ -68,7 +68,10 @@ App listens on `http://localhost:9000` (override with `SERVER_PORT`).
 ./gradlew test
 ```
 
-All tests deterministic, HTTP boundary mocked.
+Unit tests are deterministic with the HTTP boundary mocked. The repository
+integration test (`AnalysisRepositoryIntegrationTest`) spins up Postgres 17
+via Testcontainers and runs the real Flyway migrations against it — it's
+auto-skipped when Docker isn't reachable, so CI without Docker still passes.
 
 ## What it would need to be a real signal-gen pipeline
 
@@ -83,12 +86,12 @@ These are the things that turn "screener" into "investable universe."
 
 ## Stack
 
-- Java 25, Spring Boot 4.0.6 (Web, JPA, Reactive WebFlux)
+- Java 25, Spring Boot 4.0.6 (Data JPA + Flyway starter)
 - Flyway 11.x, PostgreSQL 17 via Docker
 - Apache POI + JXLS (Excel export)
 - Apache Tika (HTML parsing)
 - Lombok, Slf4j
-- JUnit Jupiter 6 + Mockito + Hamcrest
+- JUnit Jupiter 6 + Mockito + Hamcrest + Testcontainers (PostgreSQL)
 - Gradle 9.5.1
 
 ## Notes
