@@ -28,7 +28,7 @@ Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each s
 
 ## What it demonstrates
 
-- **Event-driven Spring** — `ApplicationEventPublisher` between stages, so any stage can be skipped, re-run, or replaced without touching the others
+- **Spring event orchestration** — stages communicate via in-process `ApplicationEvent`s (synchronous, not durable messaging — see `EventManager`), so any stage can be skipped, re-run, or replaced without touching the others
 - **External-data discipline** — throttled HTTP, retry-on-failure, Tika-based HTML parsing for Zacks pages, all behind a single boundary that's mocked in tests
 - **No live calls in CI** — the test suite mocks the HTTP boundary; the same tests run deterministically on every push
 - **Configurable ranking stage** — the scoring rule (currently PEG) is one Spring bean. Replacing it doesn't disturb the universe-build or the export
