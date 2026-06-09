@@ -2,11 +2,23 @@
 
 ## Roadmap (prioritized)
 
-### P1 — correctness + honest claims (cheap, do first)
+### P1 — done
 
-- **Fix `AnalysisRepository extends JpaRepository<AnalysisStock, String>` — the entity id is `Long`.** Already on the list below but bumping it here: this is a real bug that an external reviewer flagged, easy to fix.
-- **Wire Testcontainers PostgreSQL into the test suite.** Today the H2 tests don't actually exercise the Flyway-created schema or the real JPA mappings. A single `@DataJpaTest`-style class that runs against Postgres 17 in Testcontainers would catch the `String`/`Long` mismatch above and any other column-name drift between migrations and entities. Highest-value test we don't have.
-- **Sweep README claims against current behaviour.** The recent rename pass tidied package paths, but verify every section (CI, "what it demonstrates", "what it would need to be a real signal-gen pipeline") still matches reality before deciding to pin/promote.
+All P1 items have landed:
+
+- `AnalysisRepository` parametrised with `<AnalysisStock, Long>` (was
+  `String`); `JpaSpecificationExecutor<AnalysisStock>` typed properly.
+- `AnalysisRepositoryIntegrationTest` runs against `postgres:17-alpine`
+  via Testcontainers + `@ServiceConnection`, exercising the real Flyway
+  migrations and JPA mappings end-to-end. Auto-skipped when Docker
+  isn't reachable.
+- Surfaced an additional bug along the way: under Spring Boot 4, the
+  bare `org.flywaydb:flyway-core` dep doesn't bring in the Flyway
+  autoconfiguration (it moved to `spring-boot-flyway`). Switched to
+  `spring-boot-starter-flyway` + `flyway-database-postgresql` so the
+  migrations actually run.
+- README sweep: WebFlux claim removed from stack, Tests section now
+  describes the integration coverage.
 
 ### P2 — pick one depth investment
 
@@ -36,10 +48,7 @@ Overall line coverage is **~91%**. The remaining unit-level gaps are infra-bound
 
 ## Bug Fixes
 
-- Validate the new Flyway migration against a real PostgreSQL database.
-- Add a migration-backed repository test so JPA mappings are checked against Flyway-created tables.
-- Review all entity column names against migrations, not only `target_price` and `recommendation_rating`.
-- Revisit `AnalysisRepository extends JpaRepository<AnalysisStock, String>` because `AnalysisStock.id` is `Long`.
+- Review all entity column names against migrations, not only `target_price` and `recommendation_rating`. (The Testcontainers integration test now catches schema/entity drift for `AnalysisStock`, but the other four entities are not yet covered.)
 - Review date columns currently mapped as `LocalDate` while migrations define `TIMESTAMP`.
 - Check all parsing paths for empty substring/index failures when external HTML changes.
 - Make Yahoo parsing fail with clear errors when required JSON sections are missing.
@@ -57,7 +66,7 @@ Overall line coverage is **~91%**. The remaining unit-level gaps are infra-bound
 
 ## Tests
 
-- Add PostgreSQL integration tests, preferably using Testcontainers, so JPA mappings are validated against the Flyway-created schema (closest to production behaviour today).
+- Extend Testcontainers coverage to the other four repositories (`ZacksSectorMappingRepository`, `ZacksListRepository`, `ZacksBasicRepository`, `StockLookupRepository`). They all use `<Entity, String>` id types and are not exercised against the real schema today.
 - Re-enable the live network parser tests (`YahooStockLookupTest`'s `@Disabled` methods) as opt-in tests gated by a system property — so they can be run manually but don't break CI.
 - Add tests for pipeline event ordering and failure propagation across stages.
 - Enable-path test for `EmailExport` using a fake SMTP server.
