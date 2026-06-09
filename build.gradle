@@ -36,8 +36,8 @@ dependencies {
     implementation 'org.jxls:jxls-poi:3.1.0'       // POI integration for JXLS
 
     // Content Detection and Extraction
-    implementation 'org.apache.tika:tika-core:3.2.3'
-    implementation 'org.apache.tika:tika-parsers-standard-package:3.2.3'
+    implementation 'org.apache.tika:tika-core:3.3.1'
+    implementation 'org.apache.tika:tika-parsers-standard-package:3.3.1'
 
     // Date and Time
     implementation 'joda-time:joda-time:2.14.0'
