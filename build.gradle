@@ -32,7 +32,7 @@ dependencies {
     implementation 'org.apache.poi:poi:5.5.0'
 
     // JXLS (Excel templating)
-    implementation 'org.jxls:jxls:2.14.0'          // <-- contains org.jxls.util.JxlsHelper
+    implementation 'org.jxls:jxls:3.1.0'          // <-- contains org.jxls.util.JxlsHelper
     implementation 'org.jxls:jxls-poi:3.0.0'       // POI integration for JXLS
 
     // Content Detection and Extraction
