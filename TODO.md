@@ -4,7 +4,6 @@
 - Add a walk-forward backtester with an immutable experiment manifest (universe snapshot, parameters, code commit) so results are reproducible.
 - Add data-quality + look-ahead-bias checks at the pipeline boundary (stale prices, missing fundamentals, halted tickers).
 - Add transaction costs, borrow costs, and corporate-action handling.
-- Add benchmark comparison plus turnover / drawdown / Sharpe / exposure reports.
 - Add a Python notebook that consumes exported results.
 - Test `ExcelExport` with a JXLS template fixture under `src/test/resources/template/`.
 - Test `EmailExport`'s enabled SMTP path against GreenMail or Wiser.
@@ -26,8 +25,6 @@
 - Replace `date`, `event`, `zacksDate` system properties with typed Spring config or CLI args.
 - Decide whether this app is a batch job or web service; remove server concerns if batch-only.
 - Migrate to Spring Batch if restartability, stage tracking, and retry behaviour become important.
-- Review and replace deprecated Gradle APIs.
-- Publish CI artifacts for test reports and migration validation.
 - Document external data-source limitations and throttling behaviour.
 - Add a recovery guide for failed or partial runs.
 - Add a schema overview explaining the five pipeline tables and report output.
