@@ -4,7 +4,7 @@ plugins {
     id 'org.springframework.boot' version '4.0.6'
     id 'jacoco'
     id 'org.owasp.dependencycheck' version '12.2.2'
-    id 'com.diffplug.spotless' version '8.6.0'
+    id 'com.diffplug.spotless' version '8.7.0'
 }
 
 version = '1.0-SNAPSHOT'
