@@ -31,9 +31,8 @@ dependencies {
     // Microsoft Office / Excel handling
     implementation 'org.apache.poi:poi:5.5.1'
 
-    // JXLS (Excel templating)
-    implementation 'org.jxls:jxls:2.14.0'          // <-- contains org.jxls.util.JxlsHelper
-    implementation 'org.jxls:jxls-poi:3.1.0'       // POI integration for JXLS
+    // JXLS 3.x (Excel templating) — jxls-poi pulls the matching jxls core transitively
+    implementation 'org.jxls:jxls-poi:3.1.0'
 
     // Content Detection and Extraction
     implementation 'org.apache.tika:tika-core:3.3.1'

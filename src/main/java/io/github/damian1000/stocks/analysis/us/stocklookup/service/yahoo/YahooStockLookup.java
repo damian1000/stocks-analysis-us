@@ -161,16 +161,4 @@ public class YahooStockLookup {
         return stockLookup;
     }
 
-    public static void main(String[] args) {
-        HtmlRetriever htmlRetriever = new HtmlRetriever();
-        HtmlParser htmlParser = new HtmlParser();
-        YahooStockLookup yahooStockLookup = new YahooStockLookup(htmlRetriever, htmlParser);
-        try {
-            yahooStockLookup.lookup("");
-        } catch (DataRetrievalError dataRetrievalError) {
-            log.error("An exception has occurred", dataRetrievalError);
-        }
-
-    }
-
 }

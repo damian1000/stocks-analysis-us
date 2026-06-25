@@ -116,4 +116,21 @@ class HtmlParserTest {
         Amount a = htmlParser.extractCurrencyAndNumber("$");
         assertEquals(0, a.getPrice().compareTo(BigDecimal.ZERO));
     }
+
+    @Test
+    void extractors_returnEmptyWhenEndMarkerOrStartMarkerAbsent() {
+        // endText absent -> endIndex < 0 -> fall through to empty
+        assertEquals("", htmlParser.extractText("XSTART_keep", "_", "ZZZ"));
+        assertEquals("", htmlParser.extractTextFromStartString("XSTART_keep", "XSTART", "_", "ZZZ"));
+        assertEquals("", htmlParser.extractText("XSTART_keep", "XSTART", "_", "ZZZ"));
+        assertEquals("", htmlParser.extractRow("before BEGIN payload", "BEGIN", "ZZZ"));
+
+        // single-char startText that is absent -> startIndex == 0 -> empty
+        assertEquals("", htmlParser.extractText("abc", "z", "c"));
+        assertEquals("", htmlParser.extractTextFromStartString("abc", "a", "z", "c"));
+        assertEquals("", htmlParser.extractText("abc", "a", "z", "c"));
+
+        // startString at index 0 -> index not > 0 -> empty
+        assertEquals("", htmlParser.extractRow("BEGIN payload", "BEGIN", "ZZZ"));
+    }
 }
