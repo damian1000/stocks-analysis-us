@@ -165,3 +165,16 @@ dependencyCheck {
         nuspecEnabled = false
     }
 }
+
+// `bootRun` defaults to the dev profile and forwards the pipeline-control
+// system properties documented in the README (-Devent / -Ddate / -DzacksDate),
+// which the Spring Boot plugin does not pass through by default.
+tasks.named('bootRun') {
+    systemProperty 'spring.profiles.active', System.getProperty('spring.profiles.active', 'dev')
+    ['event', 'date', 'zacksDate'].each { key ->
+        String value = System.getProperty(key)
+        if (value != null) {
+            systemProperty key, value
+        }
+    }
+}

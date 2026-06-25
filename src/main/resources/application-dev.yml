@@ -3,8 +3,6 @@ spring:
     banner-mode: "OFF"
   application:
     name: stock-analysis-us
-  profiles:
-    active: dev
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/trading}
     username: ${DB_USERNAME:postgres}
