@@ -5,9 +5,25 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Top-level shape of the Yahoo {@code quoteSummary} JSON API response:
+ * {@code {"quoteSummary":{"result":[ <store> ],"error":{...}}}}.
+ */
 @Data
 public class QuoteSummary {
-    QuoteSummaryStore QuoteSummaryStore;
+    QuoteSummaryResult quoteSummary;
+}
+
+@Data
+class QuoteSummaryResult {
+    List<QuoteSummaryStore> result;
+    QuoteSummaryError error;
+}
+
+@Data
+class QuoteSummaryError {
+    String code;
+    String description;
 }
 
 @Data

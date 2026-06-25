@@ -33,9 +33,13 @@ stocks:
   analysis:
     us:
       stocklookup:
+        # Throttle between Yahoo lookups (seconds). The JSON quoteSummary API
+        # tolerates rapid calls (a 15-symbol burst returns 200s with no delay),
+        # so the old 10-15s scraping throttle is no longer needed; keep a small
+        # courtesy delay to stay well under any rate limit on long runs.
         sleeptime:
-          min: 10
-          max: 15
+          min: 0
+          max: 1
       template: template/ZacksPriceDetailsTemplate.xls
       fx:
         provider-url: ${FX_PROVIDER_URL:https://data.fixer.io/api/latest}
