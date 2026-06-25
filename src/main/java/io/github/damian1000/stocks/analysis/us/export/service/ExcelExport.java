@@ -2,8 +2,8 @@ package io.github.damian1000.stocks.analysis.us.export.service;
 
 import io.github.damian1000.stocks.analysis.us.analysis.domain.AnalysisStock;
 import lombok.extern.slf4j.Slf4j;
-import org.jxls.common.Context;
-import org.jxls.util.JxlsHelper;
+import org.jxls.builder.JxlsStreaming;
+import org.jxls.transform.poi.JxlsPoi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -26,14 +28,14 @@ public class ExcelExport {
         try {
             try (InputStream is = new ClassPathResource(excelTemplate).getInputStream()) {
                 try (OutputStream os = new FileOutputStream(excelFileName)) {
-                    Context context = new Context();
-                    context.putVar("stocks", stocks);
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("stocks", stocks);
                     log.info("Calling jxls to create excel worksheet {}", excelFileName);
-                    JxlsHelper.getInstance().processTemplate(is, os, context);
+                    JxlsPoi.fill(is, JxlsStreaming.STREAMING_OFF, data, os);
                     log.info("Completed calling jxls to create excel worksheet {}", excelFileName);
                 }
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             log.error("An exception has occurred while attempting to generate excel file", e);
         }
     }

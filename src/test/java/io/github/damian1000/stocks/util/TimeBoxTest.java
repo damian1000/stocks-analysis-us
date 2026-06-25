@@ -4,6 +4,7 @@ import org.joda.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TimeBoxTest {
 
@@ -80,6 +81,19 @@ public class TimeBoxTest {
     public void testPreviousYear() {
         TimeBox.setToday(new LocalDate(2017, 2, 28));
         assertEquals(new LocalDate(2016, 12, 30), TimeBox.getPreviousYear());
+    }
+
+    @Test
+    public void getTodayReturnsNowWhenNotPinned() {
+        TimeBox.setToday(null);
+        assertNotNull(TimeBox.getToday());
+    }
+
+    @Test
+    public void previousFridayWhenTodayIsWeekendStaysInSameWeek() {
+        // Saturday: day-of-week (6) is past Friday, so no extra week is subtracted
+        TimeBox.setToday(new LocalDate(2017, 5, 27));
+        assertEquals(new LocalDate(2017, 5, 26), TimeBox.getPreviousFriday());
     }
 
 }

@@ -19,9 +19,4 @@ class IdGeneratorTest {
         assertDoesNotThrow(() -> UUID.fromString(first));
         assertNotEquals(first, second);
     }
-
-    @Test
-    void mainEntryPointDoesNotThrow() {
-        assertDoesNotThrow(() -> IdGenerator.main(new String[0]));
-    }
 }

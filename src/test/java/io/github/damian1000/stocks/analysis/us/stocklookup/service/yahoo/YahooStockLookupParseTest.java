@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -100,5 +101,60 @@ class YahooStockLookupParseTest {
         assertNull(result.getPrice());
         assertNull(result.getBeta());
         assertNull(result.getCompany());
+    }
+
+    @Test
+    void presentSectionsWithEmptyInnerObjectsLeaveFieldsUnset() throws DataRetrievalError {
+        HtmlResponse response = new HtmlResponse();
+        response.rawHtml = "ignored — htmlParser is mocked";
+        when(htmlRetriever.getHtml(anyString())).thenReturn(response);
+        when(htmlParser.extractTextFromStartString(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn("QuoteSummaryStore\":{\"price\":{},\"summaryDetail\":{},\"financialData\":{}," +
+                        "\"earningsTrend\":{\"trend\":[]},\"earningsHistory\":{\"history\":[]},");
+
+        StockLookup result = yahooStockLookup.lookup("EMPTY");
+
+        assertNull(result.getMarketCap());
+        assertNull(result.getPrice());
+        assertNull(result.getTargetPrice());
+        assertNull(result.getRecommendationRating());
+        assertEquals("0 out of 0 above estimated eps", result.getEarningAboveEstimates());
+    }
+
+    @Test
+    void trendAndHistoryEntriesWithNullInnerValuesAreSkipped() throws DataRetrievalError {
+        HtmlResponse response = new HtmlResponse();
+        response.rawHtml = "ignored — htmlParser is mocked";
+        when(htmlRetriever.getHtml(anyString())).thenReturn(response);
+        when(htmlParser.extractTextFromStartString(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn("QuoteSummaryStore\":{" +
+                        "\"summaryDetail\":{\"previousClose\":{\"raw\":50}}," +
+                        "\"earningsTrend\":{\"trend\":[" +
+                        "  {\"period\":\"0y\",\"earningsEstimate\":{}}," +
+                        "  {\"period\":\"+1y\",\"earningsEstimate\":{}}," +
+                        "  {\"period\":\"0y\",\"earningsEstimate\":null}," +
+                        "  null]}," +
+                        "\"earningsHistory\":{\"history\":[{\"epsDifference\":null},{\"epsDifference\":{}},null]},");
+
+        StockLookup result = yahooStockLookup.lookup("NULLS");
+
+        // previousClose present but no currency -> price stays unset
+        assertNull(result.getPrice());
+        assertNull(result.getThisYearEstimateEPS());
+        assertNull(result.getNextYearEstimateEPS());
+        assertNull(result.getLastYearEPS());
+        // one history record counted, but its eps difference is null -> none above estimate
+        assertEquals("0 out of 1 above estimated eps", result.getEarningAboveEstimates());
+    }
+
+    @Test
+    void missingQuoteSummaryStoreThrows() throws DataRetrievalError {
+        HtmlResponse response = new HtmlResponse();
+        response.rawHtml = "ignored — htmlParser is mocked";
+        when(htmlRetriever.getHtml(anyString())).thenReturn(response);
+        when(htmlParser.extractTextFromStartString(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(null);
+
+        assertThrows(DataRetrievalError.class, () -> yahooStockLookup.lookup("GONE"));
     }
 }
