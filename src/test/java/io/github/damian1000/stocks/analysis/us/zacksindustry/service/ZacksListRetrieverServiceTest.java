@@ -11,16 +11,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +39,8 @@ class ZacksListRetrieverServiceTest {
         htmlRetriever = mock(HtmlRetriever.class);
         repository = mock(ZacksListRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
-        service = new ZacksListRetrieverService(htmlRetriever, repository, eventPublisher);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(mock(PlatformTransactionManager.class));
+        service = new ZacksListRetrieverService(htmlRetriever, repository, eventPublisher, transactionTemplate);
     }
 
     @Test
@@ -59,15 +63,17 @@ class ZacksListRetrieverServiceTest {
         LocalDate date = LocalDate.of(2024, 6, 1);
         service.onZacksListStartEvent(new ZacksListStartEvent(date));
 
-        ArgumentCaptor<ZacksList> captor = ArgumentCaptor.forClass(ZacksList.class);
-        verify(repository, times(2)).save(captor.capture());
+        ArgumentCaptor<List<ZacksList>> captor = ArgumentCaptor.forClass(List.class);
+        verify(repository).saveAll(captor.capture());
+        List<ZacksList> saved = captor.getValue();
         // Sorted ascending by industry index
-        assertEquals("2", captor.getAllValues().get(0).getIndex());
-        assertEquals("Tech", captor.getAllValues().get(0).getIndustry());
-        assertEquals("5", captor.getAllValues().get(1).getIndex());
-        assertEquals("Banking", captor.getAllValues().get(1).getIndustry());
-        assertEquals("42", captor.getAllValues().get(1).getTotal());
-        assertEquals(date, captor.getAllValues().get(1).getDate());
+        assertEquals(2, saved.size());
+        assertEquals("2", saved.get(0).getIndex());
+        assertEquals("Tech", saved.get(0).getIndustry());
+        assertEquals("5", saved.get(1).getIndex());
+        assertEquals("Banking", saved.get(1).getIndustry());
+        assertEquals("42", saved.get(1).getTotal());
+        assertEquals(date, saved.get(1).getDate());
 
         verify(repository).deleteByDate(date);
         verify(eventPublisher).publishEvent(any(ZacksListCompleteEvent.class));
@@ -78,5 +84,7 @@ class ZacksListRetrieverServiceTest {
         when(htmlRetriever.getHtml(anyString())).thenThrow(new DataRetrievalError(new IOException("net")));
         assertThrows(IllegalStateException.class,
                 () -> service.onZacksListStartEvent(new ZacksListStartEvent(LocalDate.now())));
+        // The fetch failed, so existing good data must NOT have been deleted.
+        verify(repository, never()).deleteByDate(any());
     }
 }
