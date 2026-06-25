@@ -64,6 +64,10 @@ public class HtmlRetriever {
 
                 HttpResponse response = client.execute(request);
                 int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode >= 400 && statusCode < 500) {
+                    // 4xx client errors (e.g. 404 Not Found) won't change on retry — fail fast.
+                    throw new ClientHttpError("Unexpected HTTP status " + statusCode + " for " + url);
+                }
                 if (statusCode < HttpStatus.SC_OK || statusCode >= HttpStatus.SC_MULTIPLE_CHOICES) {
                     throw new IOException("Unexpected HTTP status " + statusCode + " for " + url);
                 }
@@ -87,6 +91,9 @@ public class HtmlRetriever {
                 htmlResponse.rawHtml = rawHtml;
                 htmlResponse.parsedHtml = data;
                 return htmlResponse;
+            } catch (ClientHttpError e) {
+                log.error("Not retrying non-transient client error for url: " + url + " message: " + e.getMessage());
+                throw new DataRetrievalError(e);
             } catch (IOException | TikaException | SAXException e) {
                 if (i == retryCount) {
                     log.error("Giving up while attempting retrieve data from url: "+url +" message: "+e.getMessage(), e);
@@ -114,6 +121,13 @@ public class HtmlRetriever {
         builder.setDefaultRequestConfig(requestBuilder.build());
         builder.setConnectionManager(connectionManager);
         return builder.build();
+    }
+
+    /** Marks a non-retryable client (4xx) HTTP error so the retry loop fails fast. */
+    private static final class ClientHttpError extends IOException {
+        private ClientHttpError(String message) {
+            super(message);
+        }
     }
 
 }
