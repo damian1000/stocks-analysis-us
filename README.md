@@ -100,17 +100,6 @@ integration test (`AnalysisRepositoryIntegrationTest`) spins up Postgres 17
 via Testcontainers and runs the real Flyway migrations against it — it's
 auto-skipped when Docker isn't reachable, so CI without Docker still passes.
 
-## What it would need to be a real signal-gen pipeline
-
-This is a demo of the pipeline shape, not a production alpha factory. To take it further:
-
-- A point-in-time fundamentals store (Yahoo gives latest values; backtests need as-of dates to avoid look-ahead)
-- A separate scoring service per signal, with the universe stage publishing once and N rankers consuming
-- Survivorship-bias handling — the current universe is "what Zacks lists today"
-- Per-symbol data quality flags (stale prices, missing fundamentals, halted tickers) feeding into the export
-
-These are the things that turn "screener" into "investable universe."
-
 ## Stack
 
 - Java 25, Spring Boot 4.0.6 (Data JPA + Flyway starter)
