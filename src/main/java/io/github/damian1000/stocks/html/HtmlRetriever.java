@@ -27,11 +27,24 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class HtmlRetriever {
 
-    private static final int TIMEOUT = 1000 * 30; // seconds
+    private static final int DEFAULT_TIMEOUT_MILLIS = 1000 * 30;
+    private static final int DEFAULT_MAX_RETRIES = 10;
+    private static final long DEFAULT_RETRY_DELAY_MILLIS = 3000;
 
     private final PoolingHttpClientConnectionManager connectionManager;
+    private final int timeoutMillis;
+    private final int maxRetries;
+    private final long retryDelayMillis;
 
     public HtmlRetriever() {
+        this(DEFAULT_TIMEOUT_MILLIS, DEFAULT_MAX_RETRIES, DEFAULT_RETRY_DELAY_MILLIS);
+    }
+
+    // Visible for testing: lets a test drive the retry/error path without real backoff delays.
+    HtmlRetriever(int timeoutMillis, int maxRetries, long retryDelayMillis) {
+        this.timeoutMillis = timeoutMillis;
+        this.maxRetries = maxRetries;
+        this.retryDelayMillis = retryDelayMillis;
         connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(128);
         connectionManager.setDefaultMaxPerRoute(50);
@@ -44,7 +57,7 @@ public class HtmlRetriever {
         request.addHeader("user-agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
 
-        int retryCount = 10;
+        int retryCount = maxRetries;
         for (int i=1; i<=retryCount; i++) {
             try {
                 log.trace("Attempt "+i+" to retrieve html from url: "+url);
@@ -80,7 +93,7 @@ public class HtmlRetriever {
                     throw new DataRetrievalError(e);
                 }
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(retryDelayMillis);
                 } catch (InterruptedException e1) {
                     Thread.currentThread().interrupt();
                     throw new DataRetrievalError(e1);
@@ -94,8 +107,8 @@ public class HtmlRetriever {
 
     private HttpClient createHttpClient() {
         RequestConfig.Builder requestBuilder = RequestConfig.custom();
-        requestBuilder = requestBuilder.setConnectTimeout(TIMEOUT);
-        requestBuilder = requestBuilder.setSocketTimeout(TIMEOUT);
+        requestBuilder = requestBuilder.setConnectTimeout(timeoutMillis);
+        requestBuilder = requestBuilder.setSocketTimeout(timeoutMillis);
 
         HttpClientBuilder builder = HttpClientBuilder.create();
         builder.setDefaultRequestConfig(requestBuilder.build());
