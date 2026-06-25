@@ -19,6 +19,8 @@ build/
 *.log.*.gz
 *-stock-analysis.xls
 *.xls
+# ...but the Excel export template is a required application resource, not generated output
+!src/main/resources/template/ZacksPriceDetailsTemplate.xls
 
 # Secrets / credentials
 .env
