@@ -1,9 +1,6 @@
 package io.github.damian1000.stocks.analysis.us.stocklookup.service.yahoo;
 
 import io.github.damian1000.stocks.exception.DataRetrievalError;
-import io.github.damian1000.stocks.html.HtmlParser;
-import io.github.damian1000.stocks.html.HtmlResponse;
-import io.github.damian1000.stocks.html.HtmlRetriever;
 import io.github.damian1000.stocks.analysis.us.stocklookup.domain.StockLookup;
 import io.github.damian1000.stocks.util.IdGenerator;
 import com.google.gson.Gson;
@@ -20,8 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class YahooStockLookup {
 
-    private final HtmlRetriever htmlRetriever;
-    private final HtmlParser htmlParser;
+    private final YahooFinanceClient yahooFinanceClient;
 
     public StockLookup lookup(String zacksCode) throws DataRetrievalError {
         zacksCode = zacksCode.replaceAll("\\.", "");
@@ -31,26 +27,19 @@ public class YahooStockLookup {
         stockLookup.setDate(LocalDate.now());
         stockLookup.setZacksCode(zacksCode);
 
-        HtmlResponse overviewHtmlResponse = htmlRetriever.getHtml(String.format("https://uk.finance.yahoo.com/quote/%s/analysis?p=%s", zacksCode, zacksCode));
-        String overview = overviewHtmlResponse.rawHtml;
-        String quoteSummaryRaw = htmlParser.extractTextFromStartString(overview, "QuoteSummaryStore", "summaryDetail", "\"symbol\":");
-        if (quoteSummaryRaw == null || quoteSummaryRaw.isBlank()) {
+        String json = yahooFinanceClient.fetchQuoteSummary(zacksCode);
+        QuoteSummary quoteSummary = new Gson().fromJson(json, QuoteSummary.class);
+        if (quoteSummary == null
+                || quoteSummary.getQuoteSummary() == null
+                || quoteSummary.getQuoteSummary().getResult() == null
+                || quoteSummary.getQuoteSummary().getResult().isEmpty()) {
             throw new DataRetrievalError(String.format(
-                    "Yahoo response for %s did not contain a QuoteSummaryStore section — page format may have changed",
-                    zacksCode));
-        }
-        quoteSummaryRaw = "{\""+quoteSummaryRaw.substring(0, quoteSummaryRaw.length()-1)+"}}";
-
-        Gson g = new Gson();
-        QuoteSummary quoteSummary = g.fromJson(quoteSummaryRaw, QuoteSummary.class);
-        if (quoteSummary == null || quoteSummary.getQuoteSummaryStore() == null) {
-            throw new DataRetrievalError(String.format(
-                    "Yahoo response for %s parsed but QuoteSummaryStore was missing or empty",
+                    "Yahoo response for %s contained no quoteSummary result — symbol may be unknown or the API changed",
                     zacksCode));
         }
         {
 
-            QuoteSummaryStore quoteSummaryStore = quoteSummary.getQuoteSummaryStore();
+            QuoteSummaryStore quoteSummaryStore = quoteSummary.getQuoteSummary().getResult().get(0);
 
             if (quoteSummaryStore.getPrice() != null) {
                 Price price = quoteSummaryStore.getPrice();

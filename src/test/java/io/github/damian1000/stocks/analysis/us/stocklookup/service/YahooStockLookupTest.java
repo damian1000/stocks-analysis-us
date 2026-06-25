@@ -2,9 +2,8 @@ package io.github.damian1000.stocks.analysis.us.stocklookup.service;
 
 import io.github.damian1000.stocks.TestAssertions;
 import io.github.damian1000.stocks.exception.DataRetrievalError;
-import io.github.damian1000.stocks.html.HtmlParser;
-import io.github.damian1000.stocks.html.HtmlRetriever;
 import io.github.damian1000.stocks.analysis.us.stocklookup.domain.StockLookup;
+import io.github.damian1000.stocks.analysis.us.stocklookup.service.yahoo.YahooFinanceClient;
 import io.github.damian1000.stocks.analysis.us.stocklookup.service.yahoo.YahooStockLookup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +24,7 @@ public class YahooStockLookupTest {
     @BeforeEach
     public void setup() {
         testAssertions = new TestAssertions();
-        HtmlRetriever htmlRetriever = new HtmlRetriever();
-        HtmlParser htmlParser = new HtmlParser();
-        yahooStockLookup = new YahooStockLookup(htmlRetriever, htmlParser);
+        yahooStockLookup = new YahooStockLookup(new YahooFinanceClient());
     }
 
     @Test
