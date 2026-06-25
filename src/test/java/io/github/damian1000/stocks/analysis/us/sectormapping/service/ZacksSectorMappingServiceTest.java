@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,7 +38,8 @@ class ZacksSectorMappingServiceTest {
         htmlRetriever = mock(HtmlRetriever.class);
         repository = mock(ZacksSectorMappingRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
-        service = new ZacksSectorMappingService(htmlRetriever, repository, eventPublisher);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(mock(PlatformTransactionManager.class));
+        service = new ZacksSectorMappingService(htmlRetriever, repository, eventPublisher, transactionTemplate);
     }
 
     @Test
@@ -107,5 +111,7 @@ class ZacksSectorMappingServiceTest {
                 service.onZacksSectorMappingStartEvent(
                         new ZacksSectorMappingStartEvent(LocalDate.of(2024, 6, 1))));
         org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("Unable to download Zacks sector mapping"));
+        // The download failed, so existing good data must NOT have been deleted.
+        verify(repository, never()).deleteByDate(any());
     }
 }

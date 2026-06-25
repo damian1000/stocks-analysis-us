@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -31,20 +32,26 @@ public class ZacksSectorMappingService {
     private final HtmlRetriever htmlRetriever;
     private final ZacksSectorMappingRepository zacksSectorMappingRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     @EventListener
     public void onZacksSectorMappingStartEvent(ZacksSectorMappingStartEvent event) {
-        log.info("Zacks Sector Mapping deleteByDate {}", event.getDate());
-        zacksSectorMappingRepository.deleteByDate(event.getDate());
-
+        List<ZacksSectorMapping> sectorMapping;
         try {
-            List<ZacksSectorMapping> sectorMapping = downloadSectorMapping(event.getDate());
+            sectorMapping = downloadSectorMapping(event.getDate());
             log.info("Completed retrieving {} sector mapping from zacks", sectorMapping.size());
-            zacksSectorMappingRepository.saveAll(sectorMapping);
         } catch (DataRetrievalError dataRetrievalError) {
             log.error("An error occurred while downloading sector mapping", dataRetrievalError);
             throw new IllegalStateException("Unable to download Zacks sector mapping", dataRetrievalError);
         }
+
+        // Swap atomically only after a successful download: a failed download
+        // never reaches the delete, and a failed save rolls the delete back.
+        transactionTemplate.executeWithoutResult(status -> {
+            log.info("Zacks Sector Mapping deleteByDate {}", event.getDate());
+            zacksSectorMappingRepository.deleteByDate(event.getDate());
+            zacksSectorMappingRepository.saveAll(sectorMapping);
+        });
 
         eventPublisher.publishEvent(new ZacksSectorMappingCompleteEvent(event.getDate()));
     }

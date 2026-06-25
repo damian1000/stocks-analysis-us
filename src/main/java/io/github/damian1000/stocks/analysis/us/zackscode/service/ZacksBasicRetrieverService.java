@@ -12,16 +12,16 @@ import io.github.damian1000.stocks.analysis.us.zackscode.repository.ZacksBasicRe
 import io.github.damian1000.stocks.util.IdGenerator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,26 +35,31 @@ public class ZacksBasicRetrieverService {
     private final ZacksListRepository zacksIndustryRepository;
     private final ZacksBasicRepository zacksBasicRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     @EventListener
     public void onZacksBasicStartEvent(ZacksBasicStartEvent event) {
-        log.info("Zacks Basic deleteByDate {}", event.getDate());
-        zacksBasicRepository.deleteByDate(event.getDate());
-
         Set<ZacksList> zacksIndustries = zacksIndustryRepository.findByDate(event.getDate());
         log.info("Number of zacks industries loaded {} for date {}", zacksIndustries.size(), event.getDate());
-        AtomicInteger count = new AtomicInteger(0);
 
-        zacksIndustries.forEach(industry ->  {
+        // Fetch every industry's detail up front. If any industry fails we abort
+        // here, before deleting the previous run's data.
+        List<ZacksCode> zacksCodes = new ArrayList<>();
+        zacksIndustries.forEach(industry -> {
             try {
-                List<ZacksCode> zacksCodeList = retrieveIndustryDetail(industry, event.getDate());
-                zacksBasicRepository.saveAll(zacksCodeList);
-                count.addAndGet(zacksCodeList.size());
-            } catch(DataRetrievalError e) {
+                zacksCodes.addAll(retrieveIndustryDetail(industry, event.getDate()));
+            } catch (DataRetrievalError e) {
                 throw new IllegalStateException("Unable to retrieve Zacks basic details for " + industry.getIndustry(), e);
             }
         });
-        log.info("Completed retrieving {} basic details from zacks", count.get());
+
+        // Swap atomically only after every industry fetched successfully.
+        transactionTemplate.executeWithoutResult(status -> {
+            log.info("Zacks Basic deleteByDate {}", event.getDate());
+            zacksBasicRepository.deleteByDate(event.getDate());
+            zacksBasicRepository.saveAll(zacksCodes);
+        });
+        log.info("Completed retrieving {} basic details from zacks", zacksCodes.size());
         eventPublisher.publishEvent(new ZacksBasicCompleteEvent(event.getDate()));
     }
 

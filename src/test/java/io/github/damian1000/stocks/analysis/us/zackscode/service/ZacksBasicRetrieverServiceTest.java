@@ -14,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +47,9 @@ class ZacksBasicRetrieverServiceTest {
         zacksListRepository = mock(ZacksListRepository.class);
         zacksBasicRepository = mock(ZacksBasicRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(mock(PlatformTransactionManager.class));
         service = new ZacksBasicRetrieverService(
-                htmlRetriever, htmlParser, zacksListRepository, zacksBasicRepository, eventPublisher);
+                htmlRetriever, htmlParser, zacksListRepository, zacksBasicRepository, eventPublisher, transactionTemplate);
     }
 
     @Test
@@ -94,6 +98,8 @@ class ZacksBasicRetrieverServiceTest {
 
         assertThrows(IllegalStateException.class,
                 () -> service.onZacksBasicStartEvent(new ZacksBasicStartEvent(date)));
+        // One industry's fetch failed, so existing good data must NOT have been deleted.
+        verify(zacksBasicRepository, never()).deleteByDate(any());
     }
 
     @Test

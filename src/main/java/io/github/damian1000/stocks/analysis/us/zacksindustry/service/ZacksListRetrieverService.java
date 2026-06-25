@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -30,20 +31,27 @@ public class ZacksListRetrieverService {
     private final HtmlRetriever htmlRetriever;
     private final ZacksListRepository repository;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     @EventListener
     public void onZacksListStartEvent(ZacksListStartEvent event) {
         log.info("Zacks Industry start");
-        log.info("Zacks Industry deleteByDate {}", event.getDate());
-        repository.deleteByDate(event.getDate());
+        List<ZacksList> industries;
         try {
             log.info("Zacks Industry retrieveIndustries");
-            retrieveIndustries(event.getDate()).forEach(repository::save);
+            industries = retrieveIndustries(event.getDate());
             log.info("Zacks Industry retrieveIndustries complete");
         } catch (DataRetrievalError dataRetrievalError) {
             log.error("An error occurred while retrieving Zacks industries", dataRetrievalError);
             throw new IllegalStateException("Unable to retrieve Zacks industries", dataRetrievalError);
         }
+        // Swap atomically only after a successful fetch: a failed retrieval above
+        // never reaches the delete, and a failed save rolls the delete back.
+        transactionTemplate.executeWithoutResult(status -> {
+            log.info("Zacks Industry deleteByDate {}", event.getDate());
+            repository.deleteByDate(event.getDate());
+            repository.saveAll(industries);
+        });
         log.info("Completed Persisting Zacks Industry data");
         eventPublisher.publishEvent(new ZacksListCompleteEvent(event.getDate()));
     }
