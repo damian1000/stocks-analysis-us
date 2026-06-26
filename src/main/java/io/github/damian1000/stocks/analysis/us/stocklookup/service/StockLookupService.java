@@ -16,8 +16,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -38,6 +42,9 @@ public class StockLookupService {
 
     @Value("${stocks.analysis.us.stocklookup.sleeptime.max}")
     private int sleepTimeMax;
+
+    @Value("${stocks.analysis.us.stocklookup.concurrency:8}")
+    private int lookupConcurrency;
 
     @EventListener
     public void onStockLookupStartEvent(StockLookupStartEvent event) {
@@ -67,23 +74,43 @@ public class StockLookupService {
 
         AtomicInteger atomicInteger = new AtomicInteger();
         int count = zacksCodeList.size();
-        zacksCodeList.forEach(c -> {
-            try {
-                int i = atomicInteger.incrementAndGet();
-                log.info("{} out of {} Performing Yahoo lookup for {}", i, count, c);
-                StockLookup stockLookup = yahooStockLookup.lookup(c.getZacksCode());
-                stockLookup.setDate(event.getDate());
-                stockLookup.setId(IdGenerator.generateId());
-                stockLookup.setZacksCode(c.getZacksCode());
-                stockLookupRepository.save(stockLookup);
-            } catch (Exception e) {
-                log.error("An exception has occurred while performing Yahoo stock lookup for {}", c.getZacksCode(), e);
-                stockLookupRepository.save(errorLookup(event.getDate(), c.getZacksCode(), e));
-            }
-            sleepBetweenLookups();
-        });
+        // Yahoo tolerates concurrent requests well, so run lookups through a bounded pool
+        // instead of one-at-a-time: throughput scales with the pool while each request stays
+        // a normal call. Pool size is capped at the work size so tiny runs don't oversize it.
+        int threads = Math.max(1, Math.min(lookupConcurrency, count));
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        try {
+            List<Callable<Void>> tasks = zacksCodeList.stream()
+                    .map(c -> (Callable<Void>) () -> {
+                        lookupAndSave(c, event.getDate(), atomicInteger, count);
+                        return null;
+                    })
+                    .collect(Collectors.toList());
+            pool.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while looking up stocks", e);
+        } finally {
+            pool.shutdown();
+        }
 
         eventPublisher.publishEvent(new StockLookupCompleteEvent(event.getDate()));
+    }
+
+    private void lookupAndSave(ZacksCode c, LocalDate date, AtomicInteger counter, int count) {
+        try {
+            int i = counter.incrementAndGet();
+            log.info("{} out of {} Performing Yahoo lookup for {}", i, count, c);
+            StockLookup stockLookup = yahooStockLookup.lookup(c.getZacksCode());
+            stockLookup.setDate(date);
+            stockLookup.setId(IdGenerator.generateId());
+            stockLookup.setZacksCode(c.getZacksCode());
+            stockLookupRepository.save(stockLookup);
+        } catch (Exception e) {
+            log.error("An exception has occurred while performing Yahoo stock lookup for {}", c.getZacksCode(), e);
+            stockLookupRepository.save(errorLookup(date, c.getZacksCode(), e));
+        }
+        sleepBetweenLookups();
     }
 
     private StockLookup errorLookup(LocalDate date, String zacksCode, Exception e) {
