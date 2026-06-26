@@ -33,10 +33,12 @@ stocks:
   analysis:
     us:
       stocklookup:
-        # Throttle between Yahoo lookups (seconds). The JSON quoteSummary API
-        # tolerates rapid calls (a 15-symbol burst returns 200s with no delay),
-        # so the old 10-15s scraping throttle is no longer needed; keep a small
-        # courtesy delay to stay well under any rate limit on long runs.
+        # Run lookups through a bounded pool — the JSON quoteSummary API tolerates
+        # concurrent calls well, so throughput scales with the pool size while each
+        # request stays a normal call, rather than hammering one-at-a-time.
+        concurrency: 8
+        # Per-call courtesy delay (seconds) on top of concurrency, to stay well under
+        # any rate limit on long runs.
         sleeptime:
           min: 0
           max: 1

@@ -22,6 +22,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,6 +49,7 @@ class StockLookupServiceTest {
         // wired up without a real ApplicationContext.
         ReflectionTestUtils.setField(service, "sleepTimeMin", 0);
         ReflectionTestUtils.setField(service, "sleepTimeMax", 0);
+        ReflectionTestUtils.setField(service, "lookupConcurrency", 4);
     }
 
     @AfterEach
@@ -115,6 +117,27 @@ class StockLookupServiceTest {
         ArgumentCaptor<StockLookup> captor = ArgumentCaptor.forClass(StockLookup.class);
         verify(stockLookupRepository).save(captor.capture());
         assertEquals(200, captor.getValue().getErrorMessage().length());
+    }
+
+    @Test
+    void looksUpEveryCodeThroughTheConcurrentPool() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 6, 1);
+        Set<ZacksCode> codes = new LinkedHashSet<>();
+        for (int i = 0; i < 25; i++) {
+            codes.add(newZacks("C" + i));
+        }
+        when(zacksBasicRepository.findByDate(date)).thenReturn(codes);
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of());
+        // Fresh result per call — mirrors the real lookup and avoids shared mutation across threads.
+        when(yahooStockLookup.lookup(anyString()))
+                .thenAnswer(invocation -> StockLookup.builder().company("X").build());
+
+        service.onStockLookupStartEvent(new StockLookupStartEvent(date));
+
+        // Every code is looked up and saved exactly once despite running across the pool.
+        verify(yahooStockLookup, times(25)).lookup(anyString());
+        verify(stockLookupRepository, times(25)).save(any(StockLookup.class));
+        verify(eventPublisher).publishEvent(any(StockLookupCompleteEvent.class));
     }
 
     @Test
