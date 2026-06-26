@@ -133,4 +133,38 @@ class YahooStockLookupParseTest {
 
         assertThrows(DataRetrievalError.class, () -> yahooStockLookup.lookup("GONE"));
     }
+
+    @Test
+    void nullOrIncompleteEnvelopeThrows() throws DataRetrievalError {
+        // Each variant trips a different link in the null-guard chain:
+        // null whole payload, missing quoteSummary, and missing result list.
+        for (String json : new String[] {"null", "{}", "{\"quoteSummary\":{}}"}) {
+            when(yahooFinanceClient.fetchQuoteSummary(anyString())).thenReturn(json);
+            assertThrows(DataRetrievalError.class, () -> yahooStockLookup.lookup("X"));
+        }
+    }
+
+    @Test
+    void currencyWithoutCloseAndNullTrendOrHistoryAreHandled() throws DataRetrievalError {
+        // currency present but previousClose has no raw value -> price stays unset;
+        // earningsTrend/earningsHistory present but with null inner lists.
+        when(yahooFinanceClient.fetchQuoteSummary(anyString())).thenReturn(envelope(
+                "{\"summaryDetail\":{\"currency\":\"USD\",\"previousClose\":{}},"
+                        + "\"earningsTrend\":{},\"earningsHistory\":{}}"));
+
+        StockLookup result = yahooStockLookup.lookup("PARTIAL");
+
+        assertNull(result.getPrice());
+        assertNull(result.getEarningAboveEstimates());
+    }
+
+    @Test
+    void plusOneYearTrendWithNullEstimateIsSkipped() throws DataRetrievalError {
+        when(yahooFinanceClient.fetchQuoteSummary(anyString())).thenReturn(envelope(
+                "{\"earningsTrend\":{\"trend\":[{\"period\":\"+1y\",\"earningsEstimate\":null}]}}"));
+
+        StockLookup result = yahooStockLookup.lookup("PLUS1");
+
+        assertNull(result.getNextYearEstimateEPS());
+    }
 }
