@@ -41,16 +41,14 @@ public class YahooStockLookup {
 
             QuoteSummaryStore quoteSummaryStore = quoteSummary.getQuoteSummary().getResult().get(0);
 
-            if (quoteSummaryStore.getPrice() != null) {
-                Price price = quoteSummaryStore.getPrice();
-                if (price != null) {
-                    stockLookup.setCurrency(price.getCurrency());
-                    Raw priceMarketCap = price.getMarketCap();
-                    if (priceMarketCap != null) {
-                        stockLookup.setMarketCap(priceMarketCap.getRaw());
-                    }
-                    stockLookup.setCompany(price.getLongName());
+            Price price = quoteSummaryStore.getPrice();
+            if (price != null) {
+                stockLookup.setCurrency(price.getCurrency());
+                Raw priceMarketCap = price.getMarketCap();
+                if (priceMarketCap != null) {
+                    stockLookup.setMarketCap(priceMarketCap.getRaw());
                 }
+                stockLookup.setCompany(price.getLongName());
             }
 
             SummaryDetail summaryDetail = quoteSummaryStore.getSummaryDetail();
