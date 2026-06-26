@@ -118,6 +118,39 @@ class StockLookupServiceTest {
     }
 
     @Test
+    void nullErrorMessageIsStoredAsNull() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 6, 1);
+        when(zacksBasicRepository.findByDate(date)).thenReturn(Set.of(newZacks("NULLMSG")));
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of());
+
+        // An exception with no message exercises the null branch of truncate().
+        when(yahooStockLookup.lookup("NULLMSG")).thenThrow(new RuntimeException());
+
+        service.onStockLookupStartEvent(new StockLookupStartEvent(date));
+
+        ArgumentCaptor<StockLookup> captor = ArgumentCaptor.forClass(StockLookup.class);
+        verify(stockLookupRepository).save(captor.capture());
+        org.junit.jupiter.api.Assertions.assertNull(captor.getValue().getErrorMessage());
+    }
+
+    @Test
+    void throttleInterruptedSurfacesAsIllegalState() {
+        // Drive the real throttle path: a positive window means it sleeps, and a
+        // pre-set interrupt makes Thread.sleep abort immediately.
+        ReflectionTestUtils.setField(service, "sleepTimeMin", 1);
+        ReflectionTestUtils.setField(service, "sleepTimeMax", 1);
+
+        Thread.currentThread().interrupt();
+        try {
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                    () -> ReflectionTestUtils.invokeMethod(service, "sleepBetweenLookups"));
+        } finally {
+            // Clear the flag so it can't leak into other tests.
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     void zacksDateSystemPropertyOverridesEventDate() {
         LocalDate eventDate = LocalDate.of(2024, 6, 1);
         LocalDate zacksDate = LocalDate.of(2024, 5, 1);

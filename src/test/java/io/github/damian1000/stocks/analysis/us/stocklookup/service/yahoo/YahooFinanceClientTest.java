@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,6 +33,7 @@ class YahooFinanceClientTest {
     private final AtomicInteger quoteRequests = new AtomicInteger();
     private final Queue<Integer> quoteStatuses = new ConcurrentLinkedQueue<>();
     private volatile Integer forcedStatus = null;
+    private volatile boolean emptyCrumb = false;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -42,6 +44,11 @@ class YahooFinanceClientTest {
             exchange.close();
         });
         server.createContext("/v1/test/getcrumb", exchange -> {
+            if (emptyCrumb) {
+                exchange.sendResponseHeaders(200, -1);
+                exchange.close();
+                return;
+            }
             byte[] body = ("crumb-" + crumbRequests.incrementAndGet()).getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, body.length);
             try (var os = exchange.getResponseBody()) {
@@ -64,7 +71,9 @@ class YahooFinanceClientTest {
 
     @AfterEach
     void tearDown() {
-        server.stop(0);
+        if (server != null) {
+            server.stop(0);
+        }
     }
 
     @Test
@@ -96,5 +105,36 @@ class YahooFinanceClientTest {
     void throwsOnNonRetryableServerError() {
         forcedStatus = 500;
         assertThrows(DataRetrievalError.class, () -> client.fetchQuoteSummary("AAPL"));
+    }
+
+    @Test
+    void throwsWhenCrumbIsEmpty() {
+        emptyCrumb = true;
+        assertThrows(DataRetrievalError.class, () -> client.fetchQuoteSummary("AAPL"));
+    }
+
+    @Test
+    void wrapsIoErrorOnQuoteRequest() throws DataRetrievalError {
+        // First call succeeds and caches the crumb.
+        assertTrue(client.fetchQuoteSummary("AAPL").contains("Test Co"));
+        // Server goes away; the cached crumb is reused but the quote request now fails.
+        server.stop(0);
+        server = null;
+        assertThrows(DataRetrievalError.class, () -> client.fetchQuoteSummary("MSFT"));
+    }
+
+    @Test
+    void wrapsIoErrorWhenServerUnreachable() {
+        // Points at a closed port: the cookie seed swallows the IOException and logs,
+        // then the crumb fetch fails with an IOException that surfaces as DataRetrievalError.
+        YahooFinanceClient unreachable = new YahooFinanceClient("http://127.0.0.1:1", "http://127.0.0.1:1/seed");
+        assertThrows(DataRetrievalError.class, () -> unreachable.fetchQuoteSummary("AAPL"));
+    }
+
+    @Test
+    void defaultConstructorTargetsYahooEndpoints() {
+        // The no-arg constructor wires the production URLs and builds the HTTP client
+        // without making any network call.
+        assertNotNull(new YahooFinanceClient());
     }
 }

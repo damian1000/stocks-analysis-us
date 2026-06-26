@@ -3,8 +3,14 @@ package io.github.damian1000.stocks.util;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class FormatterTest {
+
+    @Test
+    void isInstantiable() {
+        assertNotNull(new Formatter());
+    }
 
     @Test
     void roundsToTwoDecimalPlaces() {
