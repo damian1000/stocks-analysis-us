@@ -137,4 +137,47 @@ class YahooFinanceClientTest {
         // without making any network call.
         assertNotNull(new YahooFinanceClient());
     }
+
+    @Test
+    void keepsSessionCookieWithRfc1123Expires() throws IOException, DataRetrievalError {
+        // Reproduces the real Yahoo gate the old loopback fake missed: the seed sets a
+        // session cookie whose Expires uses RFC 1123 spacing ("Sat, 26 Jun 2027 ..."),
+        // which HttpClient's default cookie spec rejects and drops. The crumb endpoint
+        // only issues the valid crumb when that cookie comes back, and quoteSummary only
+        // accepts the valid crumb — so a dropped cookie means a 401 on every request.
+        HttpServer cookieServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        String validCrumb = "valid-crumb";
+        cookieServer.createContext("/seed", exchange -> {
+            exchange.getResponseHeaders().add("Set-Cookie",
+                    "A3=session-token; Expires=Sat, 26 Jun 2027 15:47:02 GMT; Path=/");
+            exchange.sendResponseHeaders(404, -1); // Yahoo's seed 404s but still sets the cookie
+            exchange.close();
+        });
+        cookieServer.createContext("/v1/test/getcrumb", exchange -> {
+            String cookie = exchange.getRequestHeaders().getFirst("Cookie");
+            boolean hasSession = cookie != null && cookie.contains("A3=session-token");
+            byte[] body = (hasSession ? validCrumb : "bad-crumb").getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
+            try (var os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        });
+        cookieServer.createContext("/v10/finance/quoteSummary/", exchange -> {
+            boolean crumbValid = exchange.getRequestURI().getQuery().contains("crumb=" + validCrumb);
+            byte[] body = (crumbValid ? BODY : "{\"error\":\"Invalid Cookie\"}").getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(crumbValid ? 200 : 401, body.length);
+            try (var os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        });
+        cookieServer.start();
+        try {
+            String base = "http://127.0.0.1:" + cookieServer.getAddress().getPort();
+            YahooFinanceClient cookieClient = new YahooFinanceClient(base, base + "/seed");
+            assertTrue(cookieClient.fetchQuoteSummary("AAPL").contains("Test Co"),
+                    "session cookie with an RFC 1123 Expires must survive so the crumb validates");
+        } finally {
+            cookieServer.stop(0);
+        }
+    }
 }

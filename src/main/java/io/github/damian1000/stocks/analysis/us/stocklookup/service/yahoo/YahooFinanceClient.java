@@ -3,6 +3,8 @@ package io.github.damian1000.stocks.analysis.us.stocklookup.service.yahoo;
 import io.github.damian1000.stocks.exception.DataRetrievalError;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -43,7 +45,17 @@ public class YahooFinanceClient {
     YahooFinanceClient(String apiBaseUrl, String cookieSeedUrl) {
         this.apiBaseUrl = apiBaseUrl;
         this.cookieSeedUrl = cookieSeedUrl;
-        this.httpClient = HttpClients.custom().setDefaultCookieStore(cookieStore).build();
+        // Yahoo's session cookie sets an RFC 1123 'Expires' (e.g. "Sat, 26 Jun 2027 15:47:02 GMT"),
+        // which HttpClient's default (Netscape-draft) cookie spec rejects — it then drops the
+        // cookie, the crumb is issued for a cookieless session, and every quoteSummary 401s.
+        // The lenient RFC 6265 spec parses that date, so the cookie+crumb pair stays valid.
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setCookieSpec(CookieSpecs.STANDARD)
+                .build();
+        this.httpClient = HttpClients.custom()
+                .setDefaultCookieStore(cookieStore)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     /** Returns the raw quoteSummary JSON for a symbol, refreshing the crumb once on a 401. */
