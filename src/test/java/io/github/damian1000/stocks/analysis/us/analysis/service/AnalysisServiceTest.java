@@ -11,6 +11,8 @@ import io.github.damian1000.stocks.analysis.us.analysis.domain.PEGStock;
 import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockCompleteEvent;
 import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockStartEvent;
 import io.github.damian1000.stocks.analysis.us.analysis.repository.AnalysisRepository;
+import io.github.damian1000.stocks.exception.DataRetrievalError;
+import io.github.damian1000.stocks.fx.CurrencyConverter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,7 @@ class AnalysisServiceTest {
     private ZacksSectorMappingRepository zacksSectorMappingRepository;
     private PEGStockAnalyzer pegStockAnalyzer;
     private ApplicationEventPublisher eventPublisher;
+    private CurrencyConverter currencyConverter;
     private AnalysisService service;
 
     @BeforeEach
@@ -46,6 +49,7 @@ class AnalysisServiceTest {
         zacksSectorMappingRepository = mock(ZacksSectorMappingRepository.class);
         pegStockAnalyzer = mock(PEGStockAnalyzer.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
+        currencyConverter = mock(CurrencyConverter.class);
 
         service = new AnalysisService(
                 stockLookupRepository,
@@ -53,7 +57,8 @@ class AnalysisServiceTest {
                 zacksBasicRepository,
                 zacksSectorMappingRepository,
                 pegStockAnalyzer,
-                eventPublisher);
+                eventPublisher,
+                currencyConverter);
     }
 
     @AfterEach
@@ -145,5 +150,73 @@ class AnalysisServiceTest {
 
         verify(zacksBasicRepository).findByDate(zacksDate);
         verify(zacksSectorMappingRepository).findByDate(zacksDate);
+    }
+
+    @Test
+    void normalisesForeignCurrencyValuesToUsd() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 5, 1);
+        StockLookup lookup = StockLookup.builder()
+                .id("L3").date(date).zacksCode("GB1").company("Britannia")
+                .currency("GBP").marketCap(BigDecimal.valueOf(100))
+                .price(BigDecimal.valueOf(40)).lastYearEPS(BigDecimal.valueOf(2))
+                .thisYearEstimateEPS(BigDecimal.valueOf(4)).nextYearEstimateEPS(BigDecimal.valueOf(5))
+                .build(); // targetPrice deliberately null -> exercises the null-passthrough
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of(lookup));
+        when(zacksBasicRepository.findByDate(date)).thenReturn(Set.of());
+        when(zacksSectorMappingRepository.findByDate(date)).thenReturn(List.of());
+        when(currencyConverter.convert("GBP", "USD")).thenReturn(1.25);
+        when(pegStockAnalyzer.analyzeStocks(any())).thenReturn(PEGStock.builder().category("00 Good").build());
+
+        service.onAnalysisServiceEvent(new AnalysisStockStartEvent(date));
+
+        ArgumentCaptor<List<AnalysisStock>> captor = ArgumentCaptor.forClass(List.class);
+        verify(analysisRepository).saveAll(captor.capture());
+        AnalysisStock built = captor.getValue().get(0);
+        assertEquals("USD", built.getCurrency());
+        assertEquals(0, BigDecimal.valueOf(50).compareTo(built.getPrice()));        // 40 * 1.25
+        assertEquals(0, BigDecimal.valueOf(125).compareTo(built.getMarketCap()));   // 100 * 1.25
+        org.junit.jupiter.api.Assertions.assertNull(built.getTargetPrice());        // null stays null
+    }
+
+    @Test
+    void retainsNativeValuesWhenNoFxRateAvailable() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 5, 1);
+        StockLookup lookup = StockLookup.builder()
+                .id("L4").date(date).zacksCode("EU1").company("Europa")
+                .currency("EUR").price(BigDecimal.valueOf(30)).build();
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of(lookup));
+        when(zacksBasicRepository.findByDate(date)).thenReturn(Set.of());
+        when(zacksSectorMappingRepository.findByDate(date)).thenReturn(List.of());
+        when(currencyConverter.convert("EUR", "USD")).thenReturn(0.0); // no rate
+        when(pegStockAnalyzer.analyzeStocks(any())).thenReturn(PEGStock.builder().category("00 Good").build());
+
+        service.onAnalysisServiceEvent(new AnalysisStockStartEvent(date));
+
+        ArgumentCaptor<List<AnalysisStock>> captor = ArgumentCaptor.forClass(List.class);
+        verify(analysisRepository).saveAll(captor.capture());
+        AnalysisStock built = captor.getValue().get(0);
+        assertEquals("EUR", built.getCurrency());
+        assertEquals(0, BigDecimal.valueOf(30).compareTo(built.getPrice()));
+    }
+
+    @Test
+    void retainsNativeValuesWhenFxLookupFails() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 5, 1);
+        StockLookup lookup = StockLookup.builder()
+                .id("L5").date(date).zacksCode("JP1").company("Nihon")
+                .currency("JPY").price(BigDecimal.valueOf(1000)).build();
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of(lookup));
+        when(zacksBasicRepository.findByDate(date)).thenReturn(Set.of());
+        when(zacksSectorMappingRepository.findByDate(date)).thenReturn(List.of());
+        when(currencyConverter.convert("JPY", "USD")).thenThrow(new DataRetrievalError("broker down"));
+        when(pegStockAnalyzer.analyzeStocks(any())).thenReturn(PEGStock.builder().category("00 Good").build());
+
+        service.onAnalysisServiceEvent(new AnalysisStockStartEvent(date));
+
+        ArgumentCaptor<List<AnalysisStock>> captor = ArgumentCaptor.forClass(List.class);
+        verify(analysisRepository).saveAll(captor.capture());
+        AnalysisStock built = captor.getValue().get(0);
+        assertEquals("JPY", built.getCurrency());
+        assertEquals(0, BigDecimal.valueOf(1000).compareTo(built.getPrice()));
     }
 }

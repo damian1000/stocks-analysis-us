@@ -18,18 +18,15 @@ public class CurrencyConverter {
     private final HtmlRetriever htmlRetriever;
     private final HtmlParser htmlParser;
     private final String providerUrl;
-    private final String apiKey;
 
     private static final Map<String, Double> rates = new HashMap<>();
 
     public CurrencyConverter(HtmlRetriever htmlRetriever,
                              HtmlParser htmlParser,
-                             @Value("${stocks.analysis.us.fx.provider-url:https://data.fixer.io/api/latest}") String providerUrl,
-                             @Value("${stocks.analysis.us.fx.api-key:}") String apiKey) {
+                             @Value("${stocks.analysis.us.fx.provider-url:https://api.frankfurter.dev/v2/rates}") String providerUrl) {
         this.htmlRetriever = htmlRetriever;
         this.htmlParser = htmlParser;
         this.providerUrl = providerUrl;
-        this.apiKey = apiKey;
     }
 
     public double convert(String from, String to) throws DataRetrievalError {
@@ -37,26 +34,37 @@ public class CurrencyConverter {
             log.error("Invalid currency lookup from={} to={}", from, to);
             return 0.0;
         }
-        if (StringUtils.isEmpty(apiKey)) {
-            log.warn("FX_API_KEY not configured; skipping conversion {} -> {}", from, to);
-            return 0.0;
-        }
         Double cached = rates.get(from + to);
         if (cached != null) {
             return cached;
         }
-        String url = String.format("%s?access_key=%s&symbols=%s,%s", providerUrl, apiKey, from, to);
-        String html = htmlRetriever.getHtml(url).parsedHtml;
+        // Frankfurter quotes every currency against EUR; ask for both legs and divide.
+        String url = String.format("%s?quotes=%s,%s", providerUrl, from, to);
+        String json = htmlRetriever.getHtml(url).rawHtml;
 
-        String fromRateRaw = htmlParser.extractText(html, from + "\":", ",");
-        String toRateRaw = htmlParser.extractText(html, to + "\":", "}");
-
-        double fromRate = Double.parseDouble(fromRateRaw);
-        double toRate = Double.parseDouble(toRateRaw);
+        double fromRate = rateAgainstEur(json, from);
+        double toRate = rateAgainstEur(json, to);
+        if (fromRate == 0.0 || toRate == 0.0) {
+            log.error("FX response missing rate for {} -> {}: {}", from, to, json);
+            return 0.0;
+        }
         double conversion = toRate / fromRate;
 
         log.info("FX {} -> {} = {}", from, to, conversion);
         rates.put(from + to, conversion);
         return conversion;
+    }
+
+    /** Rate of one EUR in {@code currency}, as quoted by Frankfurter; EUR itself is the base, so 1.0. */
+    private double rateAgainstEur(String json, String currency) {
+        if ("EUR".equalsIgnoreCase(currency)) {
+            return 1.0;
+        }
+        int index = json.indexOf("\"quote\":\"" + currency.toUpperCase() + "\"");
+        if (index < 0) {
+            return 0.0;
+        }
+        String raw = htmlParser.extractText(json.substring(index), "\"rate\":", "}").trim();
+        return raw.isEmpty() ? 0.0 : Double.parseDouble(raw);
     }
 }

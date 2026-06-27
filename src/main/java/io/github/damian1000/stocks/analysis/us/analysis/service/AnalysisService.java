@@ -11,13 +11,17 @@ import io.github.damian1000.stocks.analysis.us.analysis.domain.PEGStock;
 import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockCompleteEvent;
 import io.github.damian1000.stocks.analysis.us.analysis.event.AnalysisStockStartEvent;
 import io.github.damian1000.stocks.analysis.us.analysis.repository.AnalysisRepository;
+import io.github.damian1000.stocks.exception.DataRetrievalError;
+import io.github.damian1000.stocks.fx.CurrencyConverter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,7 @@ public class AnalysisService {
     private final ZacksSectorMappingRepository zacksSectorMappingRepository;
     private final PEGStockAnalyzer stockAnalyzer;
     private final ApplicationEventPublisher eventPublisher;
+    private final CurrencyConverter currencyConverter;
 
     @EventListener
     @Transactional
@@ -67,7 +72,9 @@ public class AnalysisService {
         Map<String, ZacksSectorMapping> zacksSectorMappingMap = zacksSectorMappingList.stream().collect(
                 Collectors.toMap(zacksSectorMapping -> zacksSectorMapping.getIndustry().toUpperCase(), Function.identity()));
 
-        List<AnalysisStock> analysisStocks = stockLookupList.stream().map(stockLookup -> {
+        List<AnalysisStock> analysisStocks = stockLookupList.stream().map(rawLookup -> {
+            // Normalise to USD at the analysis boundary; every field read below is then in USD.
+            StockLookup stockLookup = toUsd(rawLookup);
             AnalysisStock.AnalysisStockBuilder analysisStockBuilder = AnalysisStock.builder();
             analysisStockBuilder.date(event.getDate());
             analysisStockBuilder.zacksCode(stockLookup.getZacksCode());
@@ -120,6 +127,40 @@ public class AnalysisService {
         log.info("Complete persisting {} number of analysis stock", analysisStocks.size());
 
         eventPublisher.publishEvent(new AnalysisStockCompleteEvent(event.getDate()));
+    }
+
+    /** Normalises a scraped lookup to USD so every downstream stage (calc + export) works in one currency. */
+    private StockLookup toUsd(StockLookup lookup) {
+        double rate = usdRate(lookup.getCurrency());
+        if (rate <= 0.0 || rate == 1.0) {
+            // Already USD, blank/unknown currency, or no rate available -> keep the native values.
+            return lookup;
+        }
+        return lookup.toBuilder()
+                .currency("USD")
+                .marketCap(scale(lookup.getMarketCap(), rate))
+                .price(scale(lookup.getPrice(), rate))
+                .targetPrice(scale(lookup.getTargetPrice(), rate))
+                .lastYearEPS(scale(lookup.getLastYearEPS(), rate))
+                .thisYearEstimateEPS(scale(lookup.getThisYearEstimateEPS(), rate))
+                .nextYearEstimateEPS(scale(lookup.getNextYearEstimateEPS(), rate))
+                .build();
+    }
+
+    private double usdRate(String currency) {
+        if (StringUtils.isBlank(currency) || "USD".equalsIgnoreCase(currency)) {
+            return 1.0;
+        }
+        try {
+            return currencyConverter.convert(currency, "USD");
+        } catch (DataRetrievalError e) {
+            log.warn("FX {} -> USD failed; retaining native values", currency, e);
+            return 0.0;
+        }
+    }
+
+    private static BigDecimal scale(BigDecimal value, double rate) {
+        return value == null ? null : value.multiply(BigDecimal.valueOf(rate));
     }
 
 }

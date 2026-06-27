@@ -33,13 +33,18 @@ stocks:
   analysis:
     us:
       stocklookup:
+        # Run lookups through a bounded pool — the JSON quoteSummary API tolerates
+        # concurrent calls well, so throughput scales with the pool size while each
+        # request stays a normal call, rather than hammering one-at-a-time.
+        concurrency: 8
+        # Per-call courtesy delay (seconds) on top of concurrency, to stay well under
+        # any rate limit on long runs.
         sleeptime:
-          min: 10
-          max: 15
+          min: 0
+          max: 1
       template: template/ZacksPriceDetailsTemplate.xls
       fx:
-        provider-url: ${FX_PROVIDER_URL:https://data.fixer.io/api/latest}
-        api-key: ${FX_API_KEY:}
+        provider-url: ${FX_PROVIDER_URL:https://api.frankfurter.dev/v2/rates}
       email:
         enabled: ${EMAIL_ENABLED:false}
         host: ${EMAIL_HOST:}

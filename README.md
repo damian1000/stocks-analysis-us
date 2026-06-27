@@ -80,8 +80,7 @@ Note: stages **chain forward** from whatever event you start with, so e.g. `Stoc
 | `DB_URL` | `jdbc:postgresql://localhost:5432/trading` | Postgres JDBC URL |
 | `DB_USERNAME` | `postgres` | |
 | `DB_PASSWORD` | `postgres` | |
-| `FX_PROVIDER_URL` | `https://data.fixer.io/api/latest` | FX rate source |
-| `FX_API_KEY` | _empty_ | Leave blank to skip FX conversion |
+| `FX_PROVIDER_URL` | `https://api.frankfurter.dev/v2/rates` | FX rate source (keyless; rates quoted against EUR) |
 | `EMAIL_ENABLED` | `false` | Set `true` to email the export at the end of the pipeline |
 | `EMAIL_HOST` / `EMAIL_PORT` | `smtp.gmail.com` / `587` | SMTP relay (only used if enabled) |
 | `EMAIL_USERNAME` / `EMAIL_PASSWORD` | _empty_ | SMTP credentials (only used if enabled) |
@@ -112,7 +111,7 @@ auto-skipped when Docker isn't reachable, so CI without Docker still passes.
 
 ## Notes
 
-- The fixer.io key is empty in `.env.example` — sign up for the free tier if you want FX conversion
+- FX conversion uses the keyless [Frankfurter](https://frankfurter.dev) API; rates are quoted against EUR and the two legs are divided to convert any pair
 - Zacks data is parsed from public pages; be respectful with throttling (`stocks.analysis.us.stocklookup.sleeptime`)
 - Historical Excel templates live under `src/main/resources/template/`
 
