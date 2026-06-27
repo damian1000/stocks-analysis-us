@@ -44,8 +44,7 @@ stocks:
           max: 1
       template: template/ZacksPriceDetailsTemplate.xls
       fx:
-        provider-url: ${FX_PROVIDER_URL:https://data.fixer.io/api/latest}
-        api-key: ${FX_API_KEY:}
+        provider-url: ${FX_PROVIDER_URL:https://api.frankfurter.dev/v2/rates}
       email:
         enabled: ${EMAIL_ENABLED:false}
         host: ${EMAIL_HOST:}

@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @Data
 @EqualsAndHashCode
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
