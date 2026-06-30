@@ -57,7 +57,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-database-postgresql:12.9.0'
 
     // Database Driver
-    implementation 'org.postgresql:postgresql:42.7.11'
+    implementation 'org.postgresql:postgresql:42.7.12'
 
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.46'
