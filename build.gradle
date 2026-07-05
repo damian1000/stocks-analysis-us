@@ -11,7 +11,6 @@ version = '1.0-SNAPSHOT'
 
 java {
     toolchain {
-        // Uses JDK 25 (you've installed 25.0.1 via winget)
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
@@ -135,6 +134,14 @@ spotless {
     java {
         target 'src/**/*.java'
         removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    // Config/docs (YAML workflows, Markdown) held to the same bar as the Java. Needs Node on
+    // PATH for Prettier (present on CI runners and dev machines).
+    format 'config', {
+        target '.github/**/*.yml', '.github/**/*.yaml', '*.md'
+        prettier('3.4.2')
         trimTrailingWhitespace()
         endWithNewline()
     }
