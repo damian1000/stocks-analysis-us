@@ -29,7 +29,7 @@ Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each s
 
 - **Spring event orchestration** — stages communicate via in-process `ApplicationEvent`s (synchronous, not durable messaging — see `EventManager`), so any stage can be skipped, re-run, or replaced without touching the others
 - **External-data discipline** — throttled HTTP, retry-on-failure, Tika-based HTML parsing for Zacks pages, all behind a single boundary that's mocked in tests
-- **No live calls in CI** — the test suite mocks the HTTP boundary; the same tests run deterministically on every push
+- **Deterministic tests, guarded integrations** — the pipeline tests mock the HTTP boundary and run the same on every push; one live smoke test per external provider (Yahoo, Frankfurter) proves the real auth and response contracts still hold, with env-var off-switches (`YAHOO_LIVE_SKIP`, `FX_LIVE_SKIP`) for offline runs
 - **Configurable ranking stage** — the scoring rule (currently PEG) is one Spring bean. Replacing it doesn't disturb the universe-build or the export
 - **Schema-managed DB** — Flyway migrations against PostgreSQL 17; the schema is the source of truth, not the JPA entities
 - **Externalised config** — per-profile YAML + env-var placeholders; nothing sensitive committed

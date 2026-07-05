@@ -49,8 +49,13 @@ public class YahooFinanceClient {
         // which HttpClient's default (Netscape-draft) cookie spec rejects — it then drops the
         // cookie, the crumb is issued for a cookieless session, and every quoteSummary 401s.
         // The lenient RFC 6265 spec parses that date, so the cookie+crumb pair stays valid.
+        // Bounded timeouts: HttpClient's defaults are infinite, so one hung Yahoo socket would
+        // stall the whole lookup stage instead of failing the symbol and moving on.
         RequestConfig requestConfig = RequestConfig.custom()
                 .setCookieSpec(CookieSpecs.STANDARD)
+                .setConnectTimeout(10_000)
+                .setConnectionRequestTimeout(10_000)
+                .setSocketTimeout(30_000)
                 .build();
         this.httpClient = HttpClients.custom()
                 .setDefaultCookieStore(cookieStore)
