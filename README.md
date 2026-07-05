@@ -75,18 +75,18 @@ Note: stages **chain forward** from whatever event you start with, so e.g. `Stoc
 
 ## Configuration
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/trading` | Postgres JDBC URL |
-| `DB_USERNAME` | `postgres` | |
-| `DB_PASSWORD` | `postgres` | |
-| `FX_PROVIDER_URL` | `https://api.frankfurter.dev/v2/rates` | FX rate source (keyless; rates quoted against EUR) |
-| `EMAIL_ENABLED` | `false` | Set `true` to email the export at the end of the pipeline |
-| `EMAIL_HOST` / `EMAIL_PORT` | `smtp.gmail.com` / `587` | SMTP relay (only used if enabled) |
-| `EMAIL_USERNAME` / `EMAIL_PASSWORD` | _empty_ | SMTP credentials (only used if enabled) |
-| `EMAIL_FROM` / `EMAIL_FROM_NAME` / `EMAIL_TO` / `EMAIL_TO_NAME` | _empty_ | Email addresses (only used if enabled) |
-| `SERVER_PORT` | `9000` | HTTP port |
-| `SPRING_PROFILES_ACTIVE` | `dev` | Spring profile |
+| Variable                                                        | Default                                    | Purpose                                                   |
+| --------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------- |
+| `DB_URL`                                                        | `jdbc:postgresql://localhost:5432/trading` | Postgres JDBC URL                                         |
+| `DB_USERNAME`                                                   | `postgres`                                 |                                                           |
+| `DB_PASSWORD`                                                   | `postgres`                                 |                                                           |
+| `FX_PROVIDER_URL`                                               | `https://api.frankfurter.dev/v2/rates`     | FX rate source (keyless; rates quoted against EUR)        |
+| `EMAIL_ENABLED`                                                 | `false`                                    | Set `true` to email the export at the end of the pipeline |
+| `EMAIL_HOST` / `EMAIL_PORT`                                     | `smtp.gmail.com` / `587`                   | SMTP relay (only used if enabled)                         |
+| `EMAIL_USERNAME` / `EMAIL_PASSWORD`                             | _empty_                                    | SMTP credentials (only used if enabled)                   |
+| `EMAIL_FROM` / `EMAIL_FROM_NAME` / `EMAIL_TO` / `EMAIL_TO_NAME` | _empty_                                    | Email addresses (only used if enabled)                    |
+| `SERVER_PORT`                                                   | `9000`                                     | HTTP port                                                 |
+| `SPRING_PROFILES_ACTIVE`                                        | `dev`                                      | Spring profile                                            |
 
 ## Tests
 
