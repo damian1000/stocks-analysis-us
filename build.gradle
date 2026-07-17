@@ -164,7 +164,6 @@ jar {
 // Fails the build if any dependency has a CVE with CVSS >= 7.0.
 dependencyCheck {
     failBuildOnCVSS = 7.0f
-    suppressionFile = 'config/owasp-suppressions.xml'
     formats = ['HTML', 'JSON']
     analyzers {
         // We don't ship npm / Ruby / .NET artefacts; skip those analysers.

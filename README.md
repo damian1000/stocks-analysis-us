@@ -47,7 +47,8 @@ docker compose up -d             # Postgres on 5432
 ./gradlew bootRun                # defaults to `dev` profile; runs the full pipeline
 ```
 
-App listens on `http://localhost:9000` (override with `SERVER_PORT`).
+The app is a batch pipeline, not a web service — `bootRun` executes the stages and exits; there
+is no HTTP listener.
 
 ## Running individual pipeline stages
 
