@@ -25,7 +25,7 @@ The pipeline is structured so the signal (currently PEG) is one stage of six —
 
 Stages talk via Spring `ApplicationEvent`s — never direct method calls. Each stage package under `src/main/java/io/github/damian1000/stocks/analysis/us/` (`sectormapping`, `zacksindustry`, `zackscode`, `stocklookup`, `analysis`, `export`) owns one stage, its DTOs, its repository, and its event publisher. Adding a stage is a new package, not a rewrite.
 
-## What it demonstrates
+## Pipeline design and test discipline
 
 - **Spring event orchestration** — stages communicate via in-process `ApplicationEvent`s (synchronous, not durable messaging — see `EventManager`), so any stage can be skipped, re-run, or replaced without touching the others
 - **External-data discipline** — throttled HTTP, retry-on-failure, Tika-based HTML parsing for Zacks pages, all behind a single boundary that's mocked in tests
@@ -82,7 +82,7 @@ Note: stages **chain forward** from whatever event you start with, so e.g. `Stoc
 | `DB_PASSWORD`                                                   | `postgres`                                 |                                                           |
 | `FX_PROVIDER_URL`                                               | `https://api.frankfurter.dev/v2/rates`     | FX rate source (keyless; rates quoted against EUR)        |
 | `EMAIL_ENABLED`                                                 | `false`                                    | Set `true` to email the export at the end of the pipeline |
-| `EMAIL_HOST` / `EMAIL_PORT`                                     | `smtp.gmail.com` / `587`                   | SMTP relay (only used if enabled)                         |
+| `EMAIL_HOST` / `EMAIL_PORT`                                     | _empty_ / `587`                            | SMTP relay (only used if enabled)                         |
 | `EMAIL_USERNAME` / `EMAIL_PASSWORD`                             | _empty_                                    | SMTP credentials (only used if enabled)                   |
 | `EMAIL_FROM` / `EMAIL_FROM_NAME` / `EMAIL_TO` / `EMAIL_TO_NAME` | _empty_                                    | Email addresses (only used if enabled)                    |
 | `SERVER_PORT`                                                   | `9000`                                     | HTTP port                                                 |
@@ -101,13 +101,13 @@ auto-skipped when Docker isn't reachable, so CI without Docker still passes.
 
 ## Stack
 
-- Java 25, Spring Boot 4.0.6 (Data JPA + Flyway starter)
-- Flyway 11.x, PostgreSQL 17 via Docker
+- Java 25, Spring Boot 4.1 (Data JPA + Flyway starter)
+- Flyway 12.x, PostgreSQL 17 via Docker
 - Apache POI + JXLS (Excel export)
 - Apache Tika (HTML parsing)
 - Lombok, Slf4j
 - JUnit Jupiter 6 + Mockito + Hamcrest + Testcontainers (PostgreSQL)
-- Gradle 9.5.1
+- Gradle 9.6
 
 ## Notes
 
