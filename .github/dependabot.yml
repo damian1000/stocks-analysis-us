@@ -17,7 +17,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "docker"
+  # docker-compose, not docker: the docker ecosystem looks for a Dockerfile, and this repository
+  # has none — only docker-compose.yml for the local Postgres. Every weekly run failed with
+  # dependency_file_not_found.
+  - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"
