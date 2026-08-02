@@ -96,19 +96,6 @@ jacocoTestCoverageVerification {
     }
 }
 
-jar {
-    manifest {
-        attributes(
-                'Main-Class': 'io.github.damian1000.stocks.Application',
-        )
-    }
-
-    // fat jar (all dependencies bundled)
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
 // `bootRun` defaults to the dev profile and forwards the pipeline-control
 // system properties documented in the README (-Devent / -Ddate / -DzacksDate),
 // which the Spring Boot plugin does not pass through by default.
