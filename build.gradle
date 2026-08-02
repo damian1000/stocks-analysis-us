@@ -7,7 +7,24 @@ plugins {
 group = 'io.github.damian1000'
 version = '1.0-SNAPSHOT'
 
+// Spring Boot's BOM manages both Jackson lines and its dependency management wins over the
+// convention plugins' jackson-bom platform, so a platform bump cannot move them here — Boot
+// 4.1.0 pins 2.21.4 and 3.1.4, and the fixes for the @JsonView and @JsonIgnoreProperties
+// bypasses (GHSA-5gvw-p9qm-jgwh, GHSA-mhm7-754m-9p8w, GHSA-5jmj-h7xm-6q6v) land a patch later.
+// Overriding Boot's own version properties is the supported lever; drop each line once Boot
+// ships a BOM that already meets the floor.
+ext['jackson-2-bom.version'] = '2.21.5'
+ext['jackson-bom.version'] = '3.1.5'
+
 dependencies {
+    constraints {
+        // commons-email 1.6.0 still resolves the pre-Jakarta mail implementation at 1.6.7,
+        // which is open to SMTP injection (GHSA-9342-92gg-6v29). Spring Boot manages
+        // jakarta.mail-api and angus-mail but not this coordinate, so the floor is declared
+        // here. Removable once commons-email drops the com.sun.mail dependency.
+        implementation 'com.sun.mail:jakarta.mail:1.6.8'
+    }
+
     // Spring Framework / Data
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
