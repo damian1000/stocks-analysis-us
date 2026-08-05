@@ -141,6 +141,61 @@ class StockLookupServiceTest {
     }
 
     @Test
+    void aWorkerFailingOutsideItsOwnCatchFailsTheBatch() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 6, 1);
+        when(zacksBasicRepository.findByDate(date)).thenReturn(new LinkedHashSet<>(Set.of(newZacks("BOOM"))));
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of());
+
+        // The lookup fails, so the service falls into its catch and tries to write an error row —
+        // and that write fails too. Nothing inside lookupAndSave catches this, so it reaches the
+        // Future, which is exactly the failure invokeAll used to discard.
+        when(yahooStockLookup.lookup("BOOM")).thenThrow(new DataRetrievalError(new java.io.IOException("yahoo down")));
+        when(stockLookupRepository.save(any(StockLookup.class))).thenThrow(new RuntimeException("database down"));
+
+        IllegalStateException thrown = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.onStockLookupStartEvent(new StockLookupStartEvent(date)));
+
+        assertEquals("1 of 1 stock lookups failed; the batch is incomplete", thrown.getMessage());
+        assertNotNull(thrown.getCause(), "the first worker failure must be preserved as the cause");
+        assertEquals("database down", thrown.getCause().getMessage());
+
+        // The batch never announces itself as complete when it lost a code.
+        verify(eventPublisher, org.mockito.Mockito.never()).publishEvent(any(StockLookupCompleteEvent.class));
+    }
+
+    @Test
+    void oneFailedWorkerDoesNotStopTheOthersFromRunning() throws DataRetrievalError {
+        LocalDate date = LocalDate.of(2024, 6, 1);
+        Set<ZacksCode> codes = new LinkedHashSet<>();
+        for (int i = 0; i < 10; i++) {
+            codes.add(newZacks("C" + i));
+        }
+        when(zacksBasicRepository.findByDate(date)).thenReturn(codes);
+        when(stockLookupRepository.findByDate(date)).thenReturn(Set.of());
+        when(yahooStockLookup.lookup(anyString()))
+                .thenAnswer(invocation -> StockLookup.builder().company("X").build());
+        // Only this one code's save blows up; the pool still runs every task to completion.
+        when(stockLookupRepository.save(any(StockLookup.class))).thenAnswer(invocation -> {
+            StockLookup saved = invocation.getArgument(0);
+            if ("C7".equals(saved.getZacksCode())) {
+                throw new RuntimeException("row rejected");
+            }
+            return saved;
+        });
+
+        IllegalStateException thrown = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.onStockLookupStartEvent(new StockLookupStartEvent(date)));
+
+        assertEquals("1 of 10 stock lookups failed; the batch is incomplete", thrown.getMessage());
+        verify(yahooStockLookup, times(10)).lookup(anyString());
+        // 11 saves, not 10: C7's row is rejected, lookupAndSave catches that and tries to write an
+        // error row for the same code, and that second write is rejected too — which is what escapes
+        // into the Future.
+        verify(stockLookupRepository, times(11)).save(any(StockLookup.class));
+        verify(eventPublisher, org.mockito.Mockito.never()).publishEvent(any(StockLookupCompleteEvent.class));
+    }
+
+    @Test
     void nullErrorMessageIsStoredAsNull() throws DataRetrievalError {
         LocalDate date = LocalDate.of(2024, 6, 1);
         when(zacksBasicRepository.findByDate(date)).thenReturn(Set.of(newZacks("NULLMSG")));
