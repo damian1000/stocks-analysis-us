@@ -20,8 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -79,6 +81,7 @@ public class StockLookupService {
         // a normal call. Pool size is capped at the work size so tiny runs don't oversize it.
         int threads = Math.max(1, Math.min(lookupConcurrency, count));
         ExecutorService pool = Executors.newFixedThreadPool(threads);
+        List<Future<Void>> results;
         try {
             List<Callable<Void>> tasks = zacksCodeList.stream()
                     .map(c -> (Callable<Void>) () -> {
@@ -86,7 +89,7 @@ public class StockLookupService {
                         return null;
                     })
                     .collect(Collectors.toList());
-            pool.invokeAll(tasks);
+            results = pool.invokeAll(tasks);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted while looking up stocks", e);
@@ -94,7 +97,40 @@ public class StockLookupService {
             pool.shutdown();
         }
 
+        failIfAnyLookupFailed(results);
+
         eventPublisher.publishEvent(new StockLookupCompleteEvent(event.getDate()));
+    }
+
+    /**
+     * A worker reaches here only by failing outside {@code lookupAndSave}'s own catch — the error-row
+     * save itself failing, or the throttle being interrupted. {@code invokeAll} hands back one Future
+     * per task and carries the failure in it rather than throwing, so discarding them would let a
+     * batch that silently lost codes publish as complete. Downstream stages read the batch as the
+     * full set for the date, so an incomplete one has to fail rather than be announced.
+     */
+    private void failIfAnyLookupFailed(List<Future<Void>> results) {
+        int failed = 0;
+        Throwable firstCause = null;
+        for (Future<Void> result : results) {
+            try {
+                result.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while collecting stock lookup results", e);
+            } catch (ExecutionException e) {
+                failed++;
+                if (firstCause == null) {
+                    firstCause = e.getCause();
+                }
+                log.error("Stock lookup worker failed", e.getCause());
+            }
+        }
+        if (failed > 0) {
+            throw new IllegalStateException(
+                    String.format("%d of %d stock lookups failed; the batch is incomplete", failed, results.size()),
+                    firstCause);
+        }
     }
 
     private void lookupAndSave(ZacksCode c, LocalDate date, AtomicInteger counter, int count) {
