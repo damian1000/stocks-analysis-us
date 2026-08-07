@@ -22,10 +22,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-class EventManagerTest {
+class PipelineSequencerTest {
 
     private final ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
-    private final EventManager manager = new EventManager(publisher);
+    private final PipelineSequencer manager = new PipelineSequencer(publisher);
 
     private static final LocalDate DATE = LocalDate.of(2026, 1, 15);
 

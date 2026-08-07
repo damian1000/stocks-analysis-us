@@ -2,13 +2,13 @@ package io.github.damian1000.stocks.analysis.us.analysis.service;
 
 import io.github.damian1000.stocks.analysis.us.stocklookup.domain.StockLookup;
 import io.github.damian1000.stocks.analysis.us.analysis.domain.PEGStock;
-import io.github.damian1000.stocks.util.NumberUtils;
+import io.github.damian1000.stocks.util.Decimals;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-import static io.github.damian1000.stocks.util.NumberUtils.diffAsPercentage;
-import static io.github.damian1000.stocks.util.NumberUtils.divide;
+import static io.github.damian1000.stocks.util.Decimals.diffAsPercentage;
+import static io.github.damian1000.stocks.util.Decimals.divide;
 
 @Component
 public class PEGStockAnalyzer {
@@ -24,8 +24,8 @@ public class PEGStockAnalyzer {
         BigDecimal thisYearEstimateEPS = stockLookup.getThisYearEstimateEPS();
         BigDecimal nextYearEstimateEPS = stockLookup.getNextYearEstimateEPS();
 
-        BigDecimal thisYearEstimatePE = NumberUtils.divide(price, thisYearEstimateEPS);
-        BigDecimal nextYearEstimatePE = NumberUtils.divide(price, nextYearEstimateEPS);
+        BigDecimal thisYearEstimatePE = Decimals.divide(price, thisYearEstimateEPS);
+        BigDecimal nextYearEstimatePE = Decimals.divide(price, nextYearEstimateEPS);
 
         BigDecimal thisYearEPSGrowth = diffAsPercentage(lastYearEPS, thisYearEstimateEPS);
         BigDecimal nextYearEPSGrowth = diffAsPercentage(thisYearEstimateEPS, nextYearEstimateEPS);

@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.github.damian1000.stocks.util.NumberUtils.format;
+import static io.github.damian1000.stocks.util.Decimals.format;
 
 @AllArgsConstructor
 @Component

@@ -21,7 +21,15 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @AllArgsConstructor
-public class EventManager {
+/**
+ * The pipeline's order, expressed as event handlers: each stage's Complete event publishes the
+ * next stage's Start event. Sector mapping to Zacks list to Zacks basic to stock lookup to
+ * analysis to export.
+ *
+ * <p>This class is the only place that order exists. No stage knows what follows it, which is
+ * what lets a stage be run alone; changing the sequence is a change here and nowhere else.
+ */
+public class PipelineSequencer {
 
     private ApplicationEventPublisher eventPublisher;
 
