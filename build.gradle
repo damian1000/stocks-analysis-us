@@ -23,6 +23,15 @@ dependencies {
         // jakarta.mail-api and angus-mail but not this coordinate, so the floor is declared
         // here. Removable once commons-email drops the com.sun.mail dependency.
         implementation 'com.sun.mail:jakarta.mail:1.6.8'
+
+        // tika-parsers-standard-package pulls jsoup 1.22.2 through its HTML parser module, and
+        // CVE-2026-71497 covers everything below 1.23.1: Cleaner can be made to emit markup
+        // through a custom raw-text element. Tika manages the coordinate, so the floor is
+        // declared here. Removable once Tika ships a release that resolves 1.23.1 itself.
+        //
+        // This one does reach a running service, unlike the same constraint in build-conventions,
+        // which only bounds a Gradle plugin's classpath.
+        implementation 'org.jsoup:jsoup:1.23.1'
     }
 
     // Spring Framework / Data
