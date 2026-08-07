@@ -1,6 +1,6 @@
 package io.github.damian1000.stocks.analysis.us.analysis.domain;
 
-import io.github.damian1000.stocks.util.NumberUtils;
+import io.github.damian1000.stocks.util.Decimals;
 import lombok.*;
 
 import jakarta.persistence.*;
@@ -103,7 +103,7 @@ public class AnalysisStock implements Comparable<AnalysisStock> {
     public int compareTo(AnalysisStock o) {
         int result = category.compareTo(o.category);
         if (result == 0) {
-            result = NumberUtils.compare(o.nextYearPEG, nextYearPEG);
+            result = Decimals.compare(o.nextYearPEG, nextYearPEG);
         }
         return result;
     }
